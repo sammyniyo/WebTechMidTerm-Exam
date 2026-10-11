@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{% if visit %}Visit registered{% else %}Visitor check-in{% endif %}{% endblock %}
+{% block hero_title %}{% if visit %}Visit registered{% else %}Visitor check-in{% endif %}{% endblock %}
+{% block hero_sub %}{% if visit %}{{ visit.full_name }}{% else %}Tell the desk you are here{% endif %}{% endblock %}
+{% block hero_note %}{% if visit %}Show this reference at the desk{% else %}A form does not approve the visit{% endif %}{% endblock %}
+
+{% block content %}
+  {% if visit %}
+    <article class="card result result-allowed">
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <p class="kicker">Reference {{ visit.reference_number }}</p>
+      <h2>{{ visit.full_name }}</h2>
+      <p class="lede">Your visit is pending. The desk still needs to confirm it before you enter.</p>
+      <dl>
+        <div>
+          <dt>Phone</dt>
+          <dd>{{ visit.phone }}</dd>
+        </div>
+        <div>
+          <dt>Organization</dt>
+          <dd>{{ visit.organization }}</dd>
+        </div>
+        <div>
+          <dt>Going to</dt>
+          <dd>{{ visit.destination }}</dd>
+        </div>
+        {% if visit.host_name %}
+          <div>
+            <dt>Visiting</dt>
+            <dd>{{ visit.host_name }}</dd>
+          </div>
+        {% endif %}
+        <div>
+          <dt>Status</dt>
+          <dd>{{ visit.get_status_display }}</dd>
+        </div>
+      </dl>
+      <a class="again" href="{% url 'gatepass:visitor_register' %}">Register another visit</a>
+    </article>
+  {% else %}
+    <form class="card" method="post" novalidate>
+      {% csrf_token %}
+      <h2>Your details</h2>
+      <p class="lede">Name, phone, and where you are going. Then the desk can find you.</p>
+
+      <div class="split">
+        {% include "gatepass/_field.html" with field=form.first_name %}
+        {% include "gatepass/_field.html" with field=form.last_name %}
+      </div>
+      {% include "gatepass/_field.html" with field=form.phone %}
+      {% include "gatepass/_field.html" with field=form.email hint="Optional. Used only if the desk needs to reach you." %}
+      {% include "gatepass/_field.html" with field=form.organization %}
+      {% include "gatepass/_field.html" with field=form.destination %}
+      {% include "gatepass/_field.html" with field=form.host_name hint="Optional." %}
+      {% include "gatepass/_field.html" with field=form.purpose hint="Optional." %}
+
+      <button type="submit">Check in</button>
+      <a class="again" href="{% url 'accounts:verify' %}">I have a campus ID</a>
+    </form>
+  {% endif %}
+{% endblock %}

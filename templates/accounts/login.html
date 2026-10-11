@@ -1,15 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Staff login{% endblock %}
+{% block title %}Staff desk{% endblock %}
+{% block hero_title %}Staff desk{% endblock %}
+{% block hero_sub %}Officers and administrators sign in{% endblock %}
+{% block hero_note %}Visitors do not need an account{% endblock %}
 
 {% block content %}
-  <section class="panel narrow">
-    <h1>Staff login</h1>
-    <p>Security officers and administrators sign in here. Visitors do not need an account.</p>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Log in</button>
-    </form>
-  </section>
+  <form class="card" method="post">
+    {% csrf_token %}
+    <h2>Sign in</h2>
+    {% if form.non_field_errors %}
+      <p class="field-error">{{ form.non_field_errors|striptags }}</p>
+    {% endif %}
+    {% for field in form %}
+      <label class="field" for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {{ field }}
+        {% if field.errors %}
+          <span class="field-error">{{ field.errors|striptags }}</span>
+        {% endif %}
+      </label>
+    {% endfor %}
+    <button type="submit">Log in</button>
+  </form>
 {% endblock %}

@@ -54,12 +54,76 @@ The full checklist for each person is in [TASKS.md](TASKS.md).
 | --- | --- | --- |
 | `/` | Public home | Shared |
 | `/login/` `/logout/` `/verify/` | `accounts` | Sam |
+| `/api/accounts/verify/` | `accounts` | Sam. Public JSON check for the gate app. |
+| `/api/accounts/members/` | `accounts` | Sam. Signed-in security staff only. |
 | Office directory | `campus` | Jackson |
 | `/visitor/` | `gatepass` | JP |
 | `/dashboard/` | `dashboard` | JP |
 | `/admin/` | Django admin | Shared |
 
 Add a new page in your own `urls.py`. `config/urls.py` already includes every app.
+
+### Accounts API
+
+JP and Jackson should call these endpoints instead of reading the accounts tables directly. The same check is available in Python:
+
+```python
+from accounts.services import verify_campus_id
+
+verify_campus_id("20251MBI049", member_type="student")
+```
+
+`id` in the JSON is the campus card number. `recordId` is the database key to store on a gate event.
+
+```http
+GET /api/accounts/verify/?id=20251MBI049&member_type=student
+POST /api/accounts/verify/
+{"id": "STF2016BUS008", "member_type": "staff"}
+```
+
+```json
+{
+  "verified": true,
+  "access": "allowed",
+  "reason": "Active student record.",
+  "member": {
+    "recordId": 1,
+    "id": "20251MBI049",
+    "memberType": "student",
+    "name": "NIYOMUHOZA Samuel",
+    "status": "ACTIVE",
+    "departmentCode": "MBI"
+  }
+}
+```
+
+A known person who is suspended, on leave, or the wrong type comes back `verified: true` and `access: "denied"`. An unknown ID comes back `verified: false`. The public check does not include the national ID or birth date.
+
+The full campus record is only for a signed-in security officer or administrator.
+
+```http
+GET /api/accounts/members/?member_type=staff&status=ACTIVE
+GET /api/accounts/members/STF2016BUS008/
+```
+
+A student record follows the campus student file: `academicLevel`, `studyMode`, `admittedTermId`, and the high-school fields. A staff record uses the same identity fields, then employment instead of academics:
+
+```json
+{
+  "id": "STF2016BUS008",
+  "memberType": "staff",
+  "name": "MUKAMANA Grace",
+  "status": "ACTIVE",
+  "departmentCode": "BUS",
+  "position": "Lecturer",
+  "staffCategory": "ACADEMIC",
+  "employmentType": "FULL_TIME",
+  "hireDate": "2016-08-15",
+  "officeCode": "BUS-210"
+}
+```
+
+Load the sample rows with `python manage.py seed_members`. Try student `20251MBI049`, staff `STF2016BUS008`, and on-leave staff `STF2022SEC001`.
 
 ### Touch these together
 

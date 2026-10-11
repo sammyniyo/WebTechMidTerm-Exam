@@ -5,26 +5,59 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}AUCA Smart Gate Pass{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
-  <header class="site-header">
-    <a class="brand" href="{% url 'home' %}">AUCA Smart Gate Pass</a>
-    <nav>
-      {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:home' %}">Dashboard</a>
-        <form method="post" action="{% url 'accounts:logout' %}">
-          {% csrf_token %}
-          <button type="submit">Log out</button>
-        </form>
-      {% else %}
-        <a href="{% url 'accounts:login' %}">Staff login</a>
-      {% endif %}
-    </nav>
-  </header>
-  <main>
+  <div class="screen">
+    <header class="card hero">
+      <div class="hero-top">
+        <span class="logo-wrap">
+          <img class="logo" src="{% static 'img/auca-logo.png' %}" alt="AUCA" onerror="this.remove()">
+          <span class="logo-fallback">AUCA</span>
+        </span>
+        <div>
+          <h1>{% block hero_title %}Gate check-in{% endblock %}</h1>
+          <p class="hero-sub">{% block hero_sub %}Tell the desk you are here{% endblock %}</p>
+        </div>
+      </div>
+      <p class="hero-note">{% block hero_note %}Show your campus ID{% endblock %}</p>
+    </header>
+
     {% block content %}{% endblock %}
-  </main>
+
+    <footer class="card institute">
+      <div class="hero-top">
+        <span class="logo-wrap logo-wrap-sm">
+          <img class="logo" src="{% static 'img/auca-logo.png' %}" alt="" onerror="this.remove()">
+          <span class="logo-fallback">AUCA</span>
+        </span>
+        <div>
+          <strong>Adventist University of Central Africa</strong>
+          <p class="hero-sub">Excellence in Education</p>
+        </div>
+      </div>
+      <p class="institute-meta">Masoro Campus, Gasabo District, Kigali, Rwanda</p>
+      <p class="institute-meta">Gishushu Campus</p>
+      <p class="institute-meta"><a href="tel:+250724796998">+250 724 796 998</a></p>
+      <p class="institute-meta"><a href="mailto:info@auca.ac.rw">info@auca.ac.rw</a></p>
+      <nav>
+        <a href="{% url 'accounts:verify' %}">Check in</a>
+        <a href="{% url 'gatepass:visitor_register' %}">Visitor</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard:home' %}">Dashboard</a>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Log out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}">Staff desk</a>
+        {% endif %}
+      </nav>
+    </footer>
+  </div>
 </body>
 </html>
