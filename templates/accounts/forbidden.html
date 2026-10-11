@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Not allowed{% endblock %}
+{% block hero_title %}Restricted{% endblock %}
+{% block hero_sub %}This desk is for security staff{% endblock %}
+{% block hero_note %}Ask an administrator for access{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <p class="lede">Your account is signed in, but it is not in the Security officer or Administrator group.</p>
+  </section>
+{% endblock %}
