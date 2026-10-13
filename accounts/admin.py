@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CampusMember, StaffProfile, StudentProfile
+from .models import CampusMember, CheckIn, StaffProfile, StudentProfile
 
 
 class StudentProfileInline(admin.StackedInline):
@@ -27,3 +27,9 @@ class CampusMemberAdmin(admin.ModelAdmin):
     list_filter = ("member_type", "status", "department_code")
     search_fields = ("campus_id", "full_name", "email", "account_code")
     inlines = [StudentProfileInline, StaffProfileInline]
+
+
+@admin.register(CheckIn)
+class CheckInAdmin(admin.ModelAdmin):
+    list_display = ("member", "checked_in_at")
+    search_fields = ("member__campus_id", "member__full_name")

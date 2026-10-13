@@ -1,15 +1,17 @@
 import json
 
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .forms import VerifyMemberForm
-from .models import CampusMember
+from .models import CampusMember, CheckIn
 from .roles import user_can_manage_gate
 from .services import member_source, member_summary, verify_campus_id
 
@@ -22,6 +24,19 @@ def verify_member(request):
             form.cleaned_data["campus_id"],
             form.cleaned_data["member_type"],
         )
+        if result["access"] == "allowed":
+            member = CampusMember.objects.get(pk=result["member"]["recordId"])
+            check_in = CheckIn.objects.create(member=member)
+            checked_in_at = timezone.localtime(check_in.checked_in_at)
+            messages.success(
+                request,
+                f"{member.full_name} checked in on {checked_in_at:%d %b %Y, %H:%M}.",
+            )
+            return render(
+                request,
+                "accounts/verify.html",
+                {"form": form, "result": result, "check_in": check_in},
+            )
     return render(
         request,
         "accounts/verify.html",

@@ -5,14 +5,16 @@
 {% block content %}
   <section class="card">
     <h2>Who is arriving?</h2>
-    <p class="lede">Students and staff verify a campus ID. A match confirms the record. Security still decides entry.</p>
-    <a class="button" href="{% url 'accounts:verify' %}">Check in with an ID</a>
-    <a class="again" href="{% url 'gatepass:visitor_register' %}">I'm a visitor</a>
-  </section>
-
-  <section class="card quiet">
-    <p><strong>Student</strong> Use the ID on the campus record, such as 20251MBI049.</p>
-    <p><strong>Staff</strong> Use the staff ID, such as STF2016BUS008.</p>
-    <p><strong>Visitor</strong> Register your name, phone, and the office you need. The visit stays pending until the desk confirms it.</p>
+    <p class="lede">Choose one. A campus ID is checked against the record. A visitor registers and waits for the desk.</p>
+    <div class="choices">
+      <a href="{% url 'accounts:verify' %}">
+        <strong>Student or staff</strong>
+        <p>Enter the ID on the campus card. Example: 20251MBI049 or STF2016BUS008.</p>
+      </a>
+      <a href="{% url 'gatepass:visitor_register' %}">
+        <strong>Visitor</strong>
+        <p>Give your name, phone, and the office you need. The visit stays pending until the desk confirms it.</p>
+      </a>
+    </div>
   </section>
 {% endblock %}
