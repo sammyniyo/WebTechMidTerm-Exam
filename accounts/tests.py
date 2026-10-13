@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import CampusMember, StaffProfile, StudentProfile
+from accounts.models import CampusMember, CheckIn, StaffProfile, StudentProfile
 from accounts.roles import SECURITY_OFFICER
 from accounts.services import verify_campus_id
 
@@ -69,13 +69,30 @@ class VerifyCampusIdTests(TestCase):
         self.assertTrue(result["verified"])
         self.assertEqual(result["access"], "denied")
 
-    def test_verify_page_renders_result(self):
+    def test_verify_page_saves_check_in_then_returns_the_form(self):
         response = self.client.post(
             reverse("accounts:verify"),
             {"member_type": "student", "campus_id": "20251MBI049"},
         )
         self.assertContains(response, "NIYOMUHOZA Samuel")
-        self.assertContains(response, "allowed")
+        self.assertContains(response, "Identity confirmed")
+        self.assertContains(response, "Checked in")
+        check_in = CheckIn.objects.get()
+        self.assertEqual(check_in.member.campus_id, "20251MBI049")
+        self.assertIsNotNone(check_in.checked_in_at)
+
+        form_page = self.client.get(reverse("accounts:verify"))
+        self.assertContains(form_page, "Check record")
+        self.assertContains(form_page, "checked in")
+        self.assertNotContains(form_page, "Identity confirmed")
+
+    def test_denied_id_does_not_save_a_check_in(self):
+        response = self.client.post(
+            reverse("accounts:verify"),
+            {"member_type": "staff", "campus_id": "STF2022SEC001"},
+        )
+        self.assertContains(response, "Check record")
+        self.assertEqual(CheckIn.objects.count(), 0)
 
     def test_verify_api_matches_the_service(self):
         response = self.client.get(

@@ -128,3 +128,16 @@ class StaffProfile(models.Model):
     def clean(self):
         if self.member_id and self.member.member_type != CampusMember.MemberType.STAFF:
             raise ValidationError("Staff details can only be saved on a staff member.")
+
+
+class CheckIn(models.Model):
+    member = models.ForeignKey(
+        CampusMember, on_delete=models.CASCADE, related_name="check_ins"
+    )
+    checked_in_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-checked_in_at"]
+
+    def __str__(self):
+        return f"{self.member.campus_id} at {self.checked_in_at:%Y-%m-%d %H:%M}"
