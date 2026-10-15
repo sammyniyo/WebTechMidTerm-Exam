@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}AUCA Smart Gate Pass{% endblock %}
+{% block title %}AUCA Gate check-in{% endblock %}
 
 {% block content %}
-  <section class="panel">
-    <p class="eyebrow">Adventist University of Central Africa</p>
-    <h1>Smart Gate Pass</h1>
-    <p>
-      Students and staff verify a campus ID. Visitors register a visit,
-      receive a reference number, and see where to go.
-    </p>
-    <p class="note">The public check-in forms are not built yet. Staff can sign in to open the dashboard shell.</p>
+  <section class="card">
+    <h2>Who is arriving?</h2>
+    <p class="lede">Choose one. A campus ID is checked against the record. A visitor registers and waits for the desk.</p>
+    <div class="choices">
+      <a href="{% url 'accounts:verify' %}">
+        <strong>Student or staff</strong>
+        <p>Enter the ID on the campus card. Example: 20251MBI049 or STF2016BUS008.</p>
+      </a>
+      <a href="{% url 'gatepass:visitor_register' %}">
+        <strong>Visitor</strong>
+        <p>Give your name, phone, and the office you need. The visit stays pending until the desk confirms it.</p>
+      </a>
+    </div>
   </section>
 {% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{% if result.access == "allowed" %}Identity confirmed{% else %}Gate check-in{% endif %}{% endblock %}
+{% block hero_title %}{% if result.access == "allowed" %}Identity confirmed{% else %}Gate check-in{% endif %}{% endblock %}
+{% block hero_sub %}{% if result.access == "allowed" %}{{ result.member.name }}{% else %}Tell the desk you are here{% endif %}{% endblock %}
+{% block hero_note %}{% if result.access == "allowed" %}You may proceed to the desk{% else %}Show your campus ID{% endif %}{% endblock %}
+
+{% block content %}
+  {% if result.access == "allowed" %}
+    <article class="card result result-allowed">
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <p class="kicker">Identity confirmed</p>
+      <h2>{{ result.member.name }}</h2>
+      <p class="lede">{{ result.reason }} Entry is allowed.</p>
+      <dl>
+        <div>
+          <dt>Campus ID</dt>
+          <dd>{{ result.member.id }}</dd>
+        </div>
+        <div>
+          <dt>Type</dt>
+          <dd>{{ result.member.memberType }}</dd>
+        </div>
+        <div>
+          <dt>Department</dt>
+          <dd>{{ result.member.departmentCode|default:"—" }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{{ result.member.status }}</dd>
+        </div>
+        <div>
+          <dt>Checked in</dt>
+          <dd>{{ check_in.checked_in_at|date:"d M Y, H:i" }}</dd>
+        </div>
+      </dl>
+      <p class="hint">Returning to the form for the next person.</p>
+    </article>
+    <script>
+      window.setTimeout(function () {
+        window.location.href = "{% url 'accounts:verify' %}";
+      }, 2200);
+    </script>
+  {% else %}
+  <form class="card" method="post" action="{% url 'accounts:verify' %}">
+    {% csrf_token %}
+    {% if messages %}
+      {% for message in messages %}
+        <p class="notice">{{ message }}</p>
+      {% endfor %}
+    {% endif %}
+    <h2>Your details</h2>
+    <p class="lede">Choose student or staff, then enter the ID on the campus card.</p>
+
+    <fieldset class="segmented">
+      <legend>Person</legend>
+      <span class="glider" aria-hidden="true"></span>
+      {% for radio in form.member_type %}
+        <label>
+          {{ radio.tag }}
+          <span>{{ radio.choice_label }}</span>
+        </label>
+      {% endfor %}
+    </fieldset>
+    {% if form.member_type.errors %}
+      <p class="field-error">{{ form.member_type.errors|striptags }}</p>
+    {% endif %}
+
+    <div class="id-stage">
+      <label class="field" for="{{ form.campus_id.id_for_label }}">
+        <span class="id-label">Campus ID</span>
+        {{ form.campus_id }}
+      </label>
+      <p class="hint hint-student">The number printed on the student card, such as 20251MBI049.</p>
+      <p class="hint hint-staff">The number printed on the staff card, such as STF2016BUS008.</p>
+      {% if form.campus_id.errors %}
+        <p class="field-error">{{ form.campus_id.errors|striptags }}</p>
+      {% endif %}
+    </div>
+
+    <button type="submit">Check record</button>
+    <a class="again" href="{% url 'gatepass:visitor_register' %}">I'm a visitor</a>
+  </form>
+  {% if result %}
+    <article class="card result result-denied">
+      <p class="kicker">{% if result.verified %}Record found{% else %}Not confirmed{% endif %}</p>
+      <h2>{% if result.member %}{{ result.member.name }}{% else %}No matching record{% endif %}</h2>
+      <p class="lede">{{ result.reason }}</p>
+    </article>
+  {% endif %}
+  <script>
+    (function () {
+      const stage = document.querySelector(".id-stage");
+      const input = document.getElementById("{{ form.campus_id.id_for_label }}");
+      const label = document.querySelector(".id-label");
+      const copy = {
+        student: { label: "Campus ID", placeholder: "20251MBI049" },
+        staff: { label: "Staff ID", placeholder: "STF2016BUS008" }
+      };
+      function apply(kind, animate) {
+        const next = copy[kind] || copy.student;
+        const paint = function () {
+          label.textContent = next.label;
+          input.placeholder = next.placeholder;
+          stage.classList.remove("is-switching");
+        };
+        if (!animate) { paint(); return; }
+        stage.classList.add("is-switching");
+        window.setTimeout(paint, 160);
+      }
+      document.querySelectorAll("input[name=member_type]").forEach(function (radio) {
+        radio.addEventListener("change", function () { apply(radio.value, true); });
+        if (radio.checked) apply(radio.value, false);
+      });
+    })();
+  </script>
+  {% endif %}
+{% endblock %}

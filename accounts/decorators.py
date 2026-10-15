@@ -1,26 +1,19 @@
-from django.contrib.auth.views import redirect_to_login
 from functools import wraps
 
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import resolve_url
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+from .roles import user_can_manage_gate
 
 
-def gate_staff_required(view_func):
-    """Allow only active staff users to access a gate or campus staff view."""
+def gate_staff_required(view):
+    """Allow security officers, administrators, and the superuser."""
 
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
-        user = request.user
+    @login_required
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if not user_can_manage_gate(request.user):
+            return render(request, "accounts/forbidden.html", status=403)
+        return view(request, *args, **kwargs)
 
-        if not user.is_authenticated:
-            return redirect_to_login(
-                request.get_full_path(),
-                resolve_url("accounts:login"),
-            )
-
-        if not user.is_active or not user.is_staff:
-            raise PermissionDenied
-
-        return view_func(request, *args, **kwargs)
-
-    return _wrapped_view
+    return wrapper

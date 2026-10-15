@@ -1,6 +1,8 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from . import views
+
 app_name = "accounts"
 
 urlpatterns = [
@@ -10,5 +12,12 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    # Sam: add /verify/ here.
+    path("verify/", views.verify_member, name="verify"),
+    path("api/accounts/verify/", views.verify_api, name="verify_api"),
+    path("api/accounts/members/", views.member_list_api, name="member_list_api"),
+    path(
+        "api/accounts/members/<str:campus_id>/",
+        views.member_detail_api,
+        name="member_detail_api",
+    ),
 ]
