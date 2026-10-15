@@ -1,0 +1,37 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | AUCA{% endblock %}
+{% block hero_title %}{{ page_title }}{% endblock %}
+{% block hero_sub %}Enter the office information below{% endblock %}
+
+{% block content %}
+<section class="card">
+  <form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    {% for field in form %}
+      <div style="margin-bottom: 16px;">
+        <label for="{{ field.id_for_label }}">
+          {{ field.label }}
+        </label>
+
+        <div>{{ field }}</div>
+
+        {% if field.help_text %}
+          <small>{{ field.help_text }}</small>
+        {% endif %}
+
+        {% for error in field.errors %}
+          <p style="color: red;">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <button type="submit">Save Office</button>
+    <a href="{% url 'campus:office_list' %}">Cancel</a>
+  </form>
+</section>
+{% endblock %}
