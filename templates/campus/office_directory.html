@@ -1,0 +1,27 @@
+
+{% extends "base.html" %}
+
+{% block title %}Office Directory | AUCA{% endblock %}
+{% block hero_title %}Campus Office Directory{% endblock %}
+{% block hero_sub %}Find an office, floor, and room{% endblock %}
+{% block hero_note %}Select an office to view directions.{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h2>Available Offices</h2>
+
+  {% for office in offices %}
+    <article class="card">
+      <h3>{{ office.name }}</h3>
+      <p><strong>Building:</strong> {{ office.building.name }}</p>
+      <p><strong>Floor:</strong> {{ office.get_floor_display }}</p>
+      <p><strong>Room:</strong> {{ office.room_number }}</p>
+      <a href="{% url 'campus:office_detail' office.pk %}">
+        View directions
+      </a>
+    </article>
+  {% empty %}
+    <p>No active offices are currently available.</p>
+  {% endfor %}
+</section>
+{% endblock %}

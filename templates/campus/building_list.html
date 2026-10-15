@@ -1,0 +1,26 @@
+
+{% extends "base.html" %}
+
+{% block title %}Buildings | AUCA{% endblock %}
+{% block hero_title %}Campus Buildings{% endblock %}
+{% block hero_sub %}Buildings registered in the directory{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h2>Buildings</h2>
+
+  {% for building in buildings %}
+    <article class="card">
+      <h3>{{ building.name }}</h3>
+      <p>{{ building.description|default:"No description provided." }}</p>
+      <p>
+        <strong>Status:</strong>
+        {% if building.is_active %}Active{% else %}Inactive{% endif %}
+      </p>
+      <p>Number of offices: {{ building.offices.count }}</p>
+    </article>
+  {% empty %}
+    <p>No buildings have been registered yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}
