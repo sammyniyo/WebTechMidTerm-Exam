@@ -1,0 +1,14 @@
+{% extends "dashboard/index.html" %}
+
+{% block title %}Gate log{% endblock %}
+{% block content %}
+  <main class="admin-shell">
+    <header class="admin-head"><h2>Gate log</h2><nav class="admin-nav"><a href="{% url 'dashboard:home' %}">Dashboard</a><a href="{% url 'dashboard:visit_list' %}">Visitors</a></nav></header>
+    <section class="admin-panel">
+      <form method="get" role="search" style="display:flex;gap:.5rem;margin-bottom:1rem"><label for="event-search" class="visually-hidden">Search gate events</label><input id="event-search" name="q" value="{{ query }}" placeholder="Visitor, reference, campus ID, officer" style="flex:1;min-width:0;padding:.65rem;border:1px solid #cbd5d2"><button type="submit">Search</button></form>
+      <table class="admin-table"><thead><tr><th>Time</th><th>Person</th><th>Type</th><th>Outcome</th><th>Officer</th></tr></thead><tbody>
+        {% for event in events %}<tr><td>{{ event.occurred_at|date:"M j, Y H:i" }}</td><td>{% if event.visit %}<a href="{% url 'dashboard:visit_detail' event.visit.reference_number %}">{{ event.visit.full_name }}</a> · {{ event.visit.reference_number }}{% else %}{{ event.member.full_name }} · {{ event.member.campus_id }}{% endif %}</td><td>{{ event.get_event_type_display }}</td><td>{{ event.get_outcome_display }}</td><td>{{ event.officer.get_username }}</td></tr>{% empty %}<tr><td colspan="5">No matching gate events.</td></tr>{% endfor %}
+      </tbody></table>
+    </section>
+  </main>
+{% endblock %}

@@ -2,10 +2,70 @@
 
 {% block title %}Dashboard{% endblock %}
 
+{% block extra_css %}
+<style>
+  .admin-shell { color: #26343a; }
+  .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.25rem; }
+  .admin-head h2 { margin: 0; font-size: 1.45rem; }
+  .admin-nav { display: flex; gap: .55rem; flex-wrap: wrap; }
+  .admin-nav a, .admin-link { color: #16776d; font-weight: 700; text-decoration: none; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+  .stat-box { padding: 1rem; border-left: 4px solid #188577; background: #fff; box-shadow: 0 2px 7px #182f3212; }
+  .stat-box:nth-child(2) { border-color: #d78c26; }
+  .stat-box:nth-child(3) { border-color: #36759a; }
+  .stat-box:nth-child(4) { border-color: #66756c; }
+  .stat-label { color: #69777b; font-size: .82rem; }
+  .stat-number { margin-top: .2rem; font-size: 1.8rem; font-weight: 800; }
+  .admin-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .admin-panel { min-width: 0; padding: 1rem; background: #fff; box-shadow: 0 2px 7px #182f3212; }
+  .admin-panel h3 { margin: 0 0 .8rem; font-size: 1rem; }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .admin-table th, .admin-table td { padding: .55rem .4rem; border-bottom: 1px solid #e5eae8; text-align: left; vertical-align: top; }
+  .admin-table th { color: #687579; font-size: .75rem; text-transform: uppercase; }
+  .status-tag { display: inline-block; padding: .16rem .4rem; background: #edf3ef; color: #38534a; font-size: .78rem; }
+  @media (max-width: 760px) { .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-columns { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
 {% block content %}
-  <section class="panel">
-    <h1>Dashboard</h1>
-    <p>Signed in as {{ user.get_username }}.</p>
-    <p class="note">Visitor totals, pending visits, and gate logs will be calculated from the database on this page.</p>
-  </section>
+  <main class="admin-shell">
+    <header class="admin-head">
+      <h2>Gate operations</h2>
+      <nav class="admin-nav" aria-label="Gate management">
+        <a href="{% url 'dashboard:visit_list' %}">Visitors</a>
+        <a href="{% url 'dashboard:gate_log' %}">Gate log</a>
+        <a href="{% url 'admin:index' %}">Administration</a>
+      </nav>
+    </header>
+    <section class="stat-grid" aria-label="Today's totals">
+      <div class="stat-box"><div class="stat-label">Visitors today</div><div class="stat-number">{{ visitors_today }}</div></div>
+      <div class="stat-box"><div class="stat-label">Pending visits</div><div class="stat-number">{{ pending_visits }}</div></div>
+      <div class="stat-box"><div class="stat-label">Entries today</div><div class="stat-number">{{ entries_today }}</div></div>
+      <div class="stat-box"><div class="stat-label">Active offices</div><div class="stat-number">{{ active_offices }}</div></div>
+    </section>
+    <section class="admin-columns">
+      <div class="admin-panel">
+        <h3>Recent visitors</h3>
+        <table class="admin-table">
+          <thead><tr><th>Visitor</th><th>Destination</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for visit in recent_visits %}
+              <tr><td><a class="admin-link" href="{% url 'dashboard:visit_detail' visit.reference_number %}">{{ visit.full_name }}</a><br>{{ visit.reference_number }}</td><td>{{ visit.destination }}</td><td><span class="status-tag">{{ visit.get_status_display }}</span></td></tr>
+            {% empty %}<tr><td colspan="3">No visits recorded yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="admin-panel">
+        <h3>Recent gate activity</h3>
+        <table class="admin-table">
+          <thead><tr><th>Time</th><th>Person</th><th>Event</th><th>Outcome</th></tr></thead>
+          <tbody>
+            {% for event in recent_events %}
+              <tr><td>{{ event.occurred_at|date:"H:i" }}</td><td>{% if event.visit %}{{ event.visit.full_name }}{% else %}{{ event.member.full_name }}{% endif %}</td><td>{{ event.get_event_type_display }}</td><td><span class="status-tag">{{ event.get_outcome_display }}</span></td></tr>
+            {% empty %}<tr><td colspan="4">No gate events recorded yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 {% endblock %}

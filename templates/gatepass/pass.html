@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Visitor pass {{ visit.reference_number }}{% endblock %}
+{% block hero_title %}Visitor pass{% endblock %}
+{% block hero_sub %}{{ visit.full_name }} · {{ visit.reference_number }}{% endblock %}
+{% block hero_note %}Present this reference to security{% endblock %}
+
+{% block content %}
+  <article class="card result">
+    <p class="kicker">{{ visit.get_status_display }}</p>
+    <h2>{{ visit.full_name }}</h2>
+    <dl>
+      <div><dt>Destination</dt><dd>{{ visit.destination }}</dd></div>
+      <div><dt>Valid until</dt><dd>{{ visit.valid_until|date:"M j, Y · H:i" }}</dd></div>
+    </dl>
+    {% if visit.status == "pending" %}<p class="lede">Security must approve this visit before entry.</p>{% endif %}
+    {% if visit.status == "approved" and is_expired %}<p class="lede">This visit has expired. Contact the desk for assistance.</p>{% endif %}
+    <a class="again" href="{% url 'gatepass:visitor_register' %}">Register another visit</a>
+  </article>
+{% endblock %}
