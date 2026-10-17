@@ -1,0 +1,71 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Visitors{% endblock %}
+{% block heading %}Visitors{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Search visitors</h2>
+      <label class="gate-search">
+        <span class="sr">Search visitors</span>
+        <input id="visitor-search" type="search" placeholder="Name, reference, or office" autocomplete="off">
+      </label>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Visitor</th>
+            <th>Reference</th>
+            <th>Destination</th>
+            <th>Host</th>
+            <th>Arrived</th>
+            <th class="status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="visitor-rows">
+          {% for visit in visitors %}
+            <tr data-find="{{ visit.reference }} {{ visit.name }} {{ visit.destination }} {{ visit.host }}">
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ visit.initials }}</span>
+                  <span>
+                    <a href="{% url 'dashboard:visit_detail' visit.reference %}">{{ visit.name }}</a>
+                    <small>{{ visit.organization }}</small>
+                  </span>
+                </span>
+              </td>
+              <td><a class="ref" href="{% url 'dashboard:visit_detail' visit.reference %}">{{ visit.reference }}</a></td>
+              <td>{{ visit.destination }}</td>
+              <td>{{ visit.host }}</td>
+              <td class="clock">{{ visit.arrived }}</td>
+              <td class="status"><span class="pill pill-{{ visit.badge }}">{{ visit.status_label }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="empty-note" id="visitor-empty" hidden>No sample visitor matches that search.</p>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (function () {
+      const input = document.getElementById("visitor-search");
+      const rows = Array.from(document.querySelectorAll("#visitor-rows tr"));
+      const empty = document.getElementById("visitor-empty");
+      input.addEventListener("input", function () {
+        const query = input.value.trim().toLowerCase();
+        let shown = 0;
+        rows.forEach(function (row) {
+          const match = !query || row.dataset.find.toLowerCase().indexOf(query) !== -1;
+          row.hidden = !match;
+          if (match) shown += 1;
+        });
+        empty.hidden = shown !== 0;
+      });
+    })();
+  </script>
+{% endblock %}

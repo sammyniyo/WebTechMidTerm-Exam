@@ -1,0 +1,45 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}{% if visit %}{{ visit.name }}{% else %}Visit{% endif %}{% endblock %}
+{% block heading %}{% if visit %}{{ visit.name }}{% else %}Visit{% endif %}{% endblock %}
+
+{% block content %}
+  <p class="back"><a href="{% url 'dashboard:visitor_list' %}">Back to visitors</a></p>
+
+  {% if visit %}
+    <section class="banner">
+      <div>
+        <p class="gate-kicker">{{ visit.reference }}</p>
+        <h2>{{ visit.organization }}</h2>
+        <p>{{ visit.purpose }}</p>
+      </div>
+      <span class="pill pill-{{ visit.badge }}">{{ visit.status_label }}</span>
+    </section>
+    <div class="gate-split">
+      <section class="panel">
+        <div class="panel-head"><h2>Visit</h2></div>
+        <dl class="facts">
+          <div><dt>Phone</dt><dd>{{ visit.phone }}</dd></div>
+          <div><dt>Email</dt><dd>{{ visit.email|default:"—" }}</dd></div>
+          <div><dt>Destination</dt><dd>{{ visit.destination }}</dd></div>
+          <div><dt>Host</dt><dd>{{ visit.host }}</dd></div>
+          <div><dt>Arrived</dt><dd>{{ visit.arrived }}</dd></div>
+          <div><dt>Valid until</dt><dd>{{ visit.valid_until }}</dd></div>
+        </dl>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Desk action</h2></div>
+        <p class="gate-note">Approve and reject stay on this card. They are not connected yet.</p>
+        <div class="actions">
+          <button type="button" disabled>Approve</button>
+          <button type="button" class="quiet" disabled>Reject</button>
+        </div>
+      </section>
+    </div>
+  {% else %}
+    <section class="panel">
+      <div class="panel-head"><h2>No visit with this reference</h2></div>
+      <p class="gate-note">Check the number and open the visitor list again.</p>
+    </section>
+  {% endif %}
+{% endblock %}

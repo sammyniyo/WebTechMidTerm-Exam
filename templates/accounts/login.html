@@ -1,14 +1,12 @@
-{% extends "base.html" %}
+{% extends "accounts/web_base.html" %}
 
-{% block title %}Staff desk{% endblock %}
-{% block hero_title %}Staff desk{% endblock %}
-{% block hero_sub %}Officers and administrators sign in{% endblock %}
-{% block hero_note %}Visitors do not need an account{% endblock %}
+{% block title %}Sign in{% endblock %}
 
-{% block content %}
-  <form class="card" method="post">
+{% block panel %}
+  <form class="auth-card" method="post">
     {% csrf_token %}
     <h2>Sign in</h2>
+    <p class="lede">Use the staff account for this desk.</p>
     {% if form.non_field_errors %}
       <p class="field-error">{{ form.non_field_errors|striptags }}</p>
     {% endif %}
@@ -22,5 +20,6 @@
       </label>
     {% endfor %}
     <button type="submit">Log in</button>
+    <a class="auth-back" href="{% url 'accounts:verify' %}">Back to check-in</a>
   </form>
 {% endblock %}

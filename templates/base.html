@@ -47,8 +47,10 @@
       <nav>
         <a href="{% url 'accounts:verify' %}">Check in</a>
         <a href="{% url 'gatepass:visitor_register' %}">Visitor</a>
-        {% if user.is_authenticated %}
+        {% if can_manage_gate %}
           <a href="{% url 'dashboard:home' %}">Dashboard</a>
+        {% endif %}
+        {% if user.is_authenticated %}
           <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
             <button type="submit">Log out</button>

@@ -1,0 +1,43 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Gate log{% endblock %}
+{% block heading %}Gate log{% endblock %}
+
+{% block content %}
+  <p class="gate-note">These rows show the layout. Live gate events are connected later.</p>
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Person</th>
+            <th>Type</th>
+            <th>Event</th>
+            <th class="status">Result</th>
+            <th>Officer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+            <tr>
+              <td class="clock">{{ event.time }}</td>
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ event.initials }}</span>
+                  <span><strong>{{ event.person }}</strong></span>
+                </span>
+              </td>
+              <td><span class="tag">{{ event.kind }}</span></td>
+              <td>{{ event.event }}</td>
+              <td class="status"><span class="pill pill-{{ event.badge }}">{{ event.result_label }}</span></td>
+              <td>{{ event.officer }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No gate events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
