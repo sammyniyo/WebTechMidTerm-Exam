@@ -1,0 +1,40 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Buildings{% endblock %}
+{% block heading %}Buildings{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Building</th>
+            <th>Offices</th>
+            <th class="status">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for building in buildings %}
+            <tr>
+              <td>
+                {{ building.name }}
+                <small>{{ building.description|default:"No description yet." }}</small>
+              </td>
+              <td class="clock">{{ building.offices.count }}</td>
+              <td class="status">
+                {% if building.is_active %}
+                  <span class="pill pill-success">Active</span>
+                {% else %}
+                  <span class="pill pill-danger">Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No buildings have been registered yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

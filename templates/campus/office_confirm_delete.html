@@ -1,0 +1,18 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Delete office{% endblock %}
+{% block heading %}Delete office{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head"><h2>Delete {{ office.name }}?</h2></div>
+    <p class="gate-note">
+      This removes {{ office.name }}, room {{ office.room_number }}, in {{ office.building.name }}.
+    </p>
+    <form class="actions" method="post">
+      {% csrf_token %}
+      <button type="submit" class="quiet">Yes, delete office</button>
+      <a href="{% url 'campus:office_list' %}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}

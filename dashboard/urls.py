@@ -7,6 +7,9 @@ app_name = "dashboard"
 urlpatterns = [
     path("", views.home, name="home"),
     path("visitors/", views.visitor_list, name="visitor_list"),
+    path("visits/", views.visitor_list, name="visit_list"),
     path("visitors/<str:reference>/", views.visit_detail, name="visit_detail"),
+    path("visits/<str:reference>/", views.visit_detail),
     path("log/", views.gate_log, name="gate_log"),
+    path("gate-log/", views.gate_log),
 ]

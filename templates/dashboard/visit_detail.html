@@ -1,7 +1,7 @@
 {% extends "dashboard/base_desk.html" %}
 
-{% block title %}{% if visit %}{{ visit.name }}{% else %}Visit{% endif %}{% endblock %}
-{% block heading %}{% if visit %}{{ visit.name }}{% else %}Visit{% endif %}{% endblock %}
+{% block title %}{% if visit %}{{ visit.full_name }}{% else %}Visit{% endif %}{% endblock %}
+{% block heading %}{% if visit %}{{ visit.full_name }}{% else %}Visit{% endif %}{% endblock %}
 
 {% block content %}
   <p class="back"><a href="{% url 'dashboard:visitor_list' %}">Back to visitors</a></p>
@@ -9,30 +9,72 @@
   {% if visit %}
     <section class="banner">
       <div>
-        <p class="gate-kicker">{{ visit.reference }}</p>
+        <p class="gate-kicker">{{ visit.reference_number }}</p>
         <h2>{{ visit.organization }}</h2>
-        <p>{{ visit.purpose }}</p>
+        <p>{{ visit.purpose|default:"No reason given." }}</p>
       </div>
-      <span class="pill pill-{{ visit.badge }}">{{ visit.status_label }}</span>
+      <span class="pill {% if visit.status == 'pending' %}pill-warning{% elif visit.status == 'rejected' %}pill-danger{% elif visit.status == 'checked_in' %}pill-info{% else %}pill-success{% endif %}">{{ visit.get_status_display }}</span>
     </section>
     <div class="gate-split">
       <section class="panel">
-        <div class="panel-head"><h2>Visit</h2></div>
+        <div class="panel-head">
+          <h2>Visit</h2>
+          <a href="{% url 'gatepass:visitor_pass' visit.reference_number %}">Open the pass</a>
+        </div>
         <dl class="facts">
           <div><dt>Phone</dt><dd>{{ visit.phone }}</dd></div>
           <div><dt>Email</dt><dd>{{ visit.email|default:"—" }}</dd></div>
           <div><dt>Destination</dt><dd>{{ visit.destination }}</dd></div>
-          <div><dt>Host</dt><dd>{{ visit.host }}</dd></div>
-          <div><dt>Arrived</dt><dd>{{ visit.arrived }}</dd></div>
-          <div><dt>Valid until</dt><dd>{{ visit.valid_until }}</dd></div>
+          <div><dt>Host</dt><dd>{{ visit.host_name|default:"—" }}</dd></div>
+          <div><dt>Arrived</dt><dd>{{ visit.created_at|date:"d M Y, H:i" }}</dd></div>
+          <div><dt>Valid until</dt><dd>{{ visit.valid_until|date:"d M Y, H:i" }}</dd></div>
         </dl>
       </section>
       <section class="panel">
         <div class="panel-head"><h2>Desk action</h2></div>
-        <p class="gate-note">Approve and reject stay on this card. They are not connected yet.</p>
-        <div class="actions">
-          <button type="button" disabled>Approve</button>
-          <button type="button" class="quiet" disabled>Reject</button>
+        {% if visit.status == "pending" %}
+          <p class="gate-note">This visit is waiting. Approve it before recording entry.</p>
+          <form class="actions" method="post" action="{% url 'gatepass:review_visit' visit.reference_number %}">
+            {% csrf_token %}
+            <button type="submit" name="decision" value="approve">Approve</button>
+            <button type="submit" class="quiet" name="decision" value="reject">Reject</button>
+          </form>
+        {% elif visit.status == "approved" %}
+          <p class="gate-note">Approved. Record entry when the visitor is at the gate.</p>
+          <form class="actions" method="post" action="{% url 'gatepass:record_gate_event' visit.reference_number %}">
+            {% csrf_token %}
+            <button type="submit" name="event_type" value="entry">Record entry</button>
+          </form>
+        {% elif visit.status == "checked_in" %}
+          <p class="gate-note">On campus. Record exit when they leave.</p>
+          <form class="actions" method="post" action="{% url 'gatepass:record_gate_event' visit.reference_number %}">
+            {% csrf_token %}
+            <button type="submit" name="event_type" value="exit">Record exit</button>
+          </form>
+        {% else %}
+          <p class="gate-note">No further gate action for this visit.</p>
+        {% endif %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th class="status">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in visit.gate_events.all %}
+                <tr>
+                  <td class="clock">{{ event.occurred_at|date:"H:i" }}</td>
+                  <td>{{ event.get_event_type_display }}</td>
+                  <td class="status"><span class="pill">{{ event.get_outcome_display }}</span></td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="3">No gate events yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

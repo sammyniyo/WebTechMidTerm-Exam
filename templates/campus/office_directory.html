@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Office directory{% endblock %}
+{% block hero_title %}Find an office{% endblock %}
+{% block hero_sub %}Active rooms on campus{% endblock %}
+{% block hero_note %}Choose an office to see how to get there{% endblock %}
+
+{% block content %}
+  {% for office in offices %}
+    <article class="card">
+      <h2>{{ office.name }}</h2>
+      <p class="lede">{{ office.building.name }} · {{ office.get_floor_display }} · Room {{ office.room_number }}</p>
+      <a class="again" href="{% url 'campus:office_detail' office.pk %}">View directions</a>
+    </article>
+  {% empty %}
+    <article class="card">
+      <h2>No offices yet</h2>
+      <p class="lede">Active offices will appear here.</p>
+    </article>
+  {% endfor %}
+{% endblock %}

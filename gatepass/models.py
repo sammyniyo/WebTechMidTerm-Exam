@@ -1,8 +1,13 @@
 import secrets
 from datetime import timedelta
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
+
+from accounts.models import CampusMember
 
 
 class VisitorVisit(models.Model):
@@ -48,6 +53,60 @@ class VisitorVisit(models.Model):
     @classmethod
     def _new_reference(cls):
         while True:
-            number = "AUC-" + secrets.token_hex(3).upper()
+            number = "AUC-" + secrets.token_hex(6).upper()
             if not cls.objects.filter(reference_number=number).exists():
                 return number
+
+
+class GateEvent(models.Model):
+    class EventType(models.TextChoices):
+        ENTRY = "entry", "Entry"
+        EXIT = "exit", "Exit"
+
+    class Outcome(models.TextChoices):
+        ACCEPTED = "accepted", "Accepted"
+        REJECTED = "rejected", "Rejected"
+
+    visit = models.ForeignKey(
+        VisitorVisit,
+        on_delete=models.CASCADE,
+        related_name="gate_events",
+        null=True,
+        blank=True,
+    )
+    member = models.ForeignKey(
+        CampusMember,
+        on_delete=models.PROTECT,
+        related_name="gate_events",
+        null=True,
+        blank=True,
+    )
+    event_type = models.CharField(max_length=8, choices=EventType.choices)
+    occurred_at = models.DateTimeField(default=timezone.now)
+    officer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="gate_events",
+    )
+    outcome = models.CharField(max_length=8, choices=Outcome.choices)
+
+    class Meta:
+        ordering = ["-occurred_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(visit__isnull=False, member__isnull=True)
+                    | Q(visit__isnull=True, member__isnull=False)
+                ),
+                name="gate_event_exactly_one_person",
+            )
+        ]
+
+    def __str__(self):
+        person = self.visit or self.member
+        return f"{self.get_event_type_display()} · {person} · {self.occurred_at:%Y-%m-%d %H:%M}"
+
+    def clean(self):
+        super().clean()
+        if (self.visit_id is None) == (self.member_id is None):
+            raise ValidationError("A gate event must belong to exactly one visit or campus member.")

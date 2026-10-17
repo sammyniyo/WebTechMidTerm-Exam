@@ -380,7 +380,7 @@ body.gate {
 
 .trend {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(1.5rem, 1fr));
   align-items: end;
   gap: 0.55rem;
   height: 8.5rem;
@@ -563,6 +563,26 @@ body.gate {
 .activity time { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
 .activity strong, .activity span { display: block; }
 .activity span { color: var(--muted); font-size: 0.8rem; }
+
+.desk-form { padding: 0.4rem 1rem 1rem; }
+.desk-form .field { display: block; margin-top: 0.85rem; font-weight: 700; }
+.desk-form input[type="text"],
+.desk-form input[type="email"],
+.desk-form select,
+.desk-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #f5f9fd;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+.desk-form .field-error { display: block; margin-top: 0.3rem; color: #9a4a4a; font-size: 0.82rem; }
+.actions a { align-self: center; color: var(--blue); font-weight: 700; text-decoration: none; }
 
 .gate-search input {
   width: min(18rem, 100%);

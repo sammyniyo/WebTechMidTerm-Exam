@@ -1,0 +1,51 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Offices{% endblock %}
+{% block heading %}Offices{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Directory</h2>
+      <a href="{% url 'campus:office_create' %}">New office</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Office</th>
+            <th>Building</th>
+            <th>Floor</th>
+            <th>Room</th>
+            <th class="status">Status</th>
+            <th class="status">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for office in offices %}
+            <tr>
+              <td><a href="{% url 'campus:office_detail' office.pk %}">{{ office.name }}</a></td>
+              <td>{{ office.building.name }}</td>
+              <td>{{ office.get_floor_display }}</td>
+              <td class="clock">{{ office.room_number }}</td>
+              <td class="status">
+                {% if office.is_active %}
+                  <span class="pill pill-success">Active</span>
+                {% else %}
+                  <span class="pill pill-danger">Inactive</span>
+                {% endif %}
+              </td>
+              <td class="status">
+                <a href="{% url 'campus:office_update' office.pk %}">Edit</a>
+                ·
+                <a href="{% url 'campus:office_delete' office.pk %}">Delete</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No office records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

@@ -21,6 +21,9 @@ class VisitorRegistrationForm(forms.ModelForm):
         self.fields["destination"].error_messages["required"] = (
             "Enter the department or office you need."
         )
+        posted = self.data.get("destination", "") if self.is_bound else ""
+        if posted:
+            self.fields["destination"].widget.attrs["data-selected"] = posted
 
     class Meta:
         model = VisitorVisit
@@ -50,7 +53,9 @@ class VisitorRegistrationForm(forms.ModelForm):
             "phone": forms.TextInput(attrs={"placeholder": "078 000 0000", "inputmode": "tel", "autocomplete": "tel"}),
             "email": forms.EmailInput(attrs={"placeholder": "name@example.com", "autocomplete": "email"}),
             "organization": forms.TextInput(attrs={"placeholder": "Company or institution"}),
-            "destination": forms.TextInput(attrs={"placeholder": "Registrar, library, faculty office"}),
+            "destination": forms.Select(
+                choices=[("", "Choose an office")],
+            ),
             "host_name": forms.TextInput(attrs={"placeholder": "Optional"}),
             "purpose": forms.Textarea(attrs={"placeholder": "A meeting, a document, registration", "rows": 3}),
         }

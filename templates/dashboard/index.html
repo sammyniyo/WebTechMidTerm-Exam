@@ -4,8 +4,6 @@
 {% block heading %}Overview{% endblock %}
 
 {% block content %}
-  <p class="sample-flag">Sample figures for the layout. Live counts are connected later.</p>
-
   <section class="stat-grid" aria-label="Today">
     {% for stat in stats %}
       <article class="stat stat-{{ stat.key }}">
@@ -40,7 +38,7 @@
     <section class="panel mix-panel">
       <div class="panel-head">
         <h2>Visitor status</h2>
-        <span>Sample morning</span>
+        <span>All visits</span>
       </div>
       <div class="stack" style="grid-template-columns: {% for row in mix %}{% if row.count %}{{ row.count }}fr {% endif %}{% endfor %};">
         {% for row in mix %}

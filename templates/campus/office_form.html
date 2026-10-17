@@ -1,0 +1,26 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <form class="desk-form" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label class="field" for="{{ field.id_for_label }}">
+          {{ field.label }}
+          {{ field }}
+          {% for error in field.errors %}
+            <span class="field-error">{{ error }}</span>
+          {% endfor %}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Save office</button>
+        <a href="{% url 'campus:office_list' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -7,10 +7,12 @@
   <section class="panel">
     <div class="panel-head">
       <h2>Search visitors</h2>
-      <label class="gate-search">
-        <span class="sr">Search visitors</span>
-        <input id="visitor-search" type="search" placeholder="Name, reference, or office" autocomplete="off">
-      </label>
+      <form class="gate-search" method="get">
+        <label>
+          <span class="sr">Search visitors</span>
+          <input id="visitor-search" name="q" type="search" value="{{ query }}" placeholder="Name, reference, or office" autocomplete="off">
+        </label>
+      </form>
     </div>
     <div class="table-wrap">
       <table>

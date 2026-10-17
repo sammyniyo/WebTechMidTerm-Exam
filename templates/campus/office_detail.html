@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ office.name }}{% endblock %}
+{% block hero_title %}{{ office.name }}{% endblock %}
+{% block hero_sub %}{{ office.building.name }}{% endblock %}
+{% block hero_note %}Room {{ office.room_number }} · {{ office.get_floor_display }}{% endblock %}
+
+{% block content %}
+  <article class="card">
+    <h2>How to find this office</h2>
+    <p class="lede">{{ office.directions|linebreaksbr }}</p>
+    <a class="again" href="{% url 'campus:office_directory' %}">Back to the directory</a>
+  </article>
+{% endblock %}
