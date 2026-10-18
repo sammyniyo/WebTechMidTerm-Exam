@@ -60,7 +60,7 @@ def review_visit(request, reference):
         messages.success(request, "Visit rejected.")
     else:
         messages.error(request, "Choose approve or reject.")
-    return redirect("dashboard:visit_detail", reference=visit.reference_number)
+    return _desk_next(request, visit.reference_number)
 
 
 @gate_staff_required
@@ -70,7 +70,7 @@ def record_gate_event(request, reference):
     event_type = request.POST.get("event_type")
     if event_type not in GateEvent.EventType.values:
         messages.error(request, "Choose entry or exit.")
-        return redirect("dashboard:visit_detail", reference=visit.reference_number)
+        return _desk_next(request, visit.reference_number)
     now = timezone.now()
     allowed_entry = (
         visit.status == VisitorVisit.Status.APPROVED
@@ -98,4 +98,11 @@ def record_gate_event(request, reference):
         messages.success(request, "Exit recorded. Visit completed.")
     else:
         messages.error(request, "This visit is not eligible for that gate action.")
-    return redirect("dashboard:visit_detail", reference=visit.reference_number)
+    return _desk_next(request, visit.reference_number)
+
+
+def _desk_next(request, reference):
+    target = request.POST.get("next") or ""
+    if target.startswith("/dashboard/") and not target.startswith("//"):
+        return redirect(target)
+    return redirect("dashboard:visit_detail", reference=reference)

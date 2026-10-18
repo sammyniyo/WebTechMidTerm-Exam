@@ -49,7 +49,7 @@
           <p class="gate-note">On campus. Record exit when they leave.</p>
           <form class="actions" method="post" action="{% url 'gatepass:record_gate_event' visit.reference_number %}">
             {% csrf_token %}
-            <button type="submit" name="event_type" value="exit">Record exit</button>
+            <button type="submit" name="event_type" value="exit">Checkout</button>
           </form>
         {% else %}
           <p class="gate-note">No further gate action for this visit.</p>
@@ -66,7 +66,7 @@
             <tbody>
               {% for event in visit.gate_events.all %}
                 <tr>
-                  <td class="clock">{{ event.occurred_at|date:"H:i" }}</td>
+                  <td class="clock">{{ event.occurred_at|date:"d M Y, H:i" }}</td>
                   <td>{{ event.get_event_type_display }}</td>
                   <td class="status"><span class="pill">{{ event.get_outcome_display }}</span></td>
                 </tr>

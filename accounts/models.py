@@ -131,10 +131,20 @@ class StaffProfile(models.Model):
 
 
 class CheckIn(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Inside"
+        CHECKED_OUT = "checked_out", "Checked out"
+
     member = models.ForeignKey(
         CampusMember, on_delete=models.CASCADE, related_name="check_ins"
     )
     checked_in_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    checked_out_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.PENDING
+    )
 
     class Meta:
         ordering = ["-checked_in_at"]

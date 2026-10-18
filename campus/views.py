@@ -2,6 +2,7 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from accounts.decorators import gate_staff_required
+from dashboard.paging import paginate
 from .forms import OfficeForm
 from .models import Building, Office
 
@@ -43,10 +44,11 @@ def office_detail(request, pk):
 def office_list(request):
     """List offices for staff management."""
     offices = Office.objects.select_related("building")
+    page = paginate(request, offices)
     return render(
         request,
         "campus/office_list.html",
-        {"offices": offices, "section": "offices"},
+        {"offices": page.object_list, "page_obj": page, "section": "offices"},
     )
 
 

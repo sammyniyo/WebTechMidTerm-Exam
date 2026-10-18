@@ -34,13 +34,9 @@
           <dd>{{ check_in.checked_in_at|date:"d M Y, H:i" }}</dd>
         </div>
       </dl>
-      <p class="hint">Returning to the form for the next person.</p>
+      <p class="lede">Arrived at {{ check_in.checked_in_at|date:"d M Y, H:i" }}. The desk approves entry and records checkout.</p>
+      <a class="again" href="{% url 'accounts:verify' %}">Next person</a>
     </article>
-    <script>
-      window.setTimeout(function () {
-        window.location.href = "{% url 'accounts:verify' %}";
-      }, 2200);
-    </script>
   {% else %}
   <form class="card" method="post" action="{% url 'accounts:verify' %}">
     {% csrf_token %}

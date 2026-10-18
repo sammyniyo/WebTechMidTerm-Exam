@@ -1,0 +1,19 @@
+{% extends "dashboard/base_desk.html" %}
+
+{% block title %}Remove {{ member.full_name }}{% endblock %}
+{% block heading %}Remove person{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head"><h2>Remove {{ member.full_name }}?</h2></div>
+    <p class="gate-note">
+      This removes {{ member.full_name }}, campus ID {{ member.campus_id }}.
+      If the person already has a gate record, the status is set to inactive instead.
+    </p>
+    <form class="actions" method="post">
+      {% csrf_token %}
+      <button type="submit" class="quiet">Yes, remove</button>
+      <a href="{% url 'dashboard:member_list' %}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}

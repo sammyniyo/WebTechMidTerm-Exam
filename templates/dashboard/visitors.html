@@ -1,4 +1,5 @@
 {% extends "dashboard/base_desk.html" %}
+{% load desk_pages %}
 
 {% block title %}Visitors{% endblock %}
 {% block heading %}Visitors{% endblock %}
@@ -49,6 +50,7 @@
       </table>
     </div>
     <p class="empty-note" id="visitor-empty" hidden>No sample visitor matches that search.</p>
+    {% pager page_obj %}
   </section>
 {% endblock %}
 

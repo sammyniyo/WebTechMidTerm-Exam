@@ -27,6 +27,10 @@
         <span class="stat-hint">{{ stat.hint }}</span>
         {% if stat.key == "entries" %}
           <a href="{% url 'dashboard:gate_log' %}">Open the log</a>
+        {% elif stat.key == "offices" %}
+          <a href="{% url 'campus:office_list' %}">See offices</a>
+        {% elif stat.key == "pending" %}
+          <a href="{% url 'dashboard:check_ins' %}">Open check-in</a>
         {% else %}
           <a href="{% url 'dashboard:visitor_list' %}">See visitors</a>
         {% endif %}
@@ -127,7 +131,7 @@
               <span>{{ event.kind }} · {{ event.event }}</span>
             </div>
             <div class="activity-end">
-              <time>{{ event.time }}</time>
+              <time>{{ event.clock }}</time>
               <em class="pill pill-{{ event.badge }}">{{ event.result_label }}</em>
             </div>
           </li>

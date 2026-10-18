@@ -1,0 +1,67 @@
+{% extends "dashboard/base_desk.html" %}
+{% load desk_pages %}
+
+{% block title %}People{% endblock %}
+{% block heading %}People{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Students and staff</h2>
+      <a href="{% url 'dashboard:member_create' %}">New person</a>
+    </div>
+    <form class="gate-search people-filters" method="get">
+      <label>
+        <span class="sr">Search people</span>
+        <input name="q" type="search" value="{{ query }}" placeholder="Name, campus ID, or department">
+      </label>
+      <input type="hidden" name="type" value="{{ kind }}">
+      <nav class="filter-pills" aria-label="Person type">
+        <a class="{% if not kind %}is-active{% endif %}" href="?q={{ query }}">All</a>
+        <a class="{% if kind == 'student' %}is-active{% endif %}" href="?q={{ query }}&amp;type=student">Students</a>
+        <a class="{% if kind == 'staff' %}is-active{% endif %}" href="?q={{ query }}&amp;type=staff">Staff</a>
+      </nav>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Person</th>
+            <th>Campus ID</th>
+            <th>Type</th>
+            <th>Department</th>
+            <th class="status">Status</th>
+            <th class="status">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for person in people %}
+            <tr>
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ person.initials }}</span>
+                  <span><strong>{{ person.name }}</strong></span>
+                </span>
+              </td>
+              <td><span class="ref">{{ person.campus_id }}</span></td>
+              <td><span class="tag">{{ person.kind }}</span></td>
+              <td>{{ person.department }}</td>
+              <td class="status">
+                <span class="pill {% if person.status == 'ACTIVE' %}pill-success{% elif person.status == 'SUSPENDED' or person.status == 'INACTIVE' %}pill-danger{% else %}pill-warning{% endif %}">{{ person.status_label }}</span>
+              </td>
+              <td class="status">
+                <span class="row-actions">
+                  <a href="{% url 'dashboard:member_edit' person.id %}">Edit</a>
+                  <a class="quiet" href="{% url 'dashboard:member_delete' person.id %}">Remove</a>
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No students or staff match this search.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% pager page_obj %}
+  </section>
+{% endblock %}
