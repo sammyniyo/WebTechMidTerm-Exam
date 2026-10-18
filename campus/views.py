@@ -2,7 +2,6 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from accounts.decorators import gate_staff_required
-from dashboard.paging import paginate
 from .forms import OfficeForm
 from .models import Building, Office
 
@@ -44,11 +43,10 @@ def office_detail(request, pk):
 def office_list(request):
     """List offices for staff management."""
     offices = Office.objects.select_related("building")
-    page = paginate(request, offices)
     return render(
         request,
         "campus/office_list.html",
-        {"offices": page.object_list, "page_obj": page, "section": "offices"},
+        {"offices": offices},
     )
 
 
@@ -67,7 +65,7 @@ def office_create(request):
     return render(
         request,
         "campus/office_form.html",
-        {"form": form, "page_title": "Create Office", "section": "offices"},
+        {"form": form, "page_title": "Create Office"},
     )
 
 
@@ -88,7 +86,7 @@ def office_update(request, pk):
     return render(
         request,
         "campus/office_form.html",
-        {"form": form, "page_title": "Update Office", "section": "offices"},
+        {"form": form, "page_title": "Update Office"},
     )
 
 
@@ -105,7 +103,7 @@ def office_delete(request, pk):
     return render(
         request,
         "campus/office_confirm_delete.html",
-        {"office": office, "section": "offices"},
+        {"office": office},
     )
 
 
@@ -116,5 +114,5 @@ def building_list(request):
     return render(
         request,
         "campus/building_list.html",
-        {"buildings": buildings, "section": "offices"},
+        {"buildings": buildings},
     )

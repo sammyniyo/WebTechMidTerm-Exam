@@ -163,6 +163,70 @@ python manage.py runserver
 
 `.env` and `.venv/` stay on your computer. Both are gitignored.
 
+#### Windows PowerShell
+
+From the project folder, use the Windows virtual environment and copy the
+example environment file with PowerShell:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+If PowerShell blocks activation, run the commands without activating the
+environment by replacing `python` with `.\.venv\Scripts\python.exe`.
+
+After configuring MySQL credentials in `.env`, initialize and run the project:
+
+```powershell
+python manage.py migrate
+python manage.py load_sample_campus
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+The sample campus records are fictional, labelled `SAMPLE DATA`, and safe to
+load repeatedly. Use them for local testing only; replace them only after the
+official campus directory has been confirmed.
+
+The campus pages are:
+
+| Purpose | Address |
+| --- | --- |
+| Public office directory and directions | `/offices/` and `/offices/<office-id>/` |
+| Staff office management | `/campus/offices/manage/` |
+| Create office | `/campus/offices/create/` |
+| Buildings | `/campus/buildings/` |
+| Admin management for buildings and offices | `/admin/` |
+
+#### Campus JSON API
+
+The campus API returns JSON. Public `GET` requests expose only active buildings
+and offices in active buildings. Creating, updating, and deleting records
+requires a logged-in active Django staff user. Writes use the normal Django
+session and CSRF protection; send `Content-Type: application/json` and a valid
+CSRF token.
+
+| Endpoint | Methods | Access |
+| --- | --- | --- |
+| `/api/buildings/` | `GET`, `POST` | Public read; staff create |
+| `/api/buildings/<id>/` | `GET`, `PUT`, `PATCH`, `DELETE` | Public read; staff write |
+| `/api/offices/` | `GET`, `POST` | Public read; staff create |
+| `/api/offices/<id>/` | `GET`, `PUT`, `PATCH`, `DELETE` | Public read; staff write |
+
+List responses have a `results` array. Detail and successful create/update
+responses contain the record. Create returns `201`; invalid JSON or form data
+returns `400`, unauthenticated writes return `401`, non-staff writes return
+`403`, and attempts to use an unsupported method return `405`.
+
+Staff management requires an active Django user with `is_staff` enabled.
+Run `python manage.py test --settings=config.test_settings campus` to test the
+campus views, forms, access restrictions, sample-data command, and JSON API.
+These test settings use an in-memory SQLite database, so tests do not require
+access to the hosted MySQL database or permission to create a MySQL test database.
+
 ### Database
 
 MySQL is hosted at `srv1429.hstgr.io`. Remote MySQL in hPanel must allow your current IP address, or the connection is refused. When the app itself is running on Hostinger, set `DB_HOST=127.0.0.1` in that server's environment. Do not use the external hostname from inside Hostinger.
@@ -251,7 +315,7 @@ Before you open it:
 ```bash
 python manage.py check
 python manage.py makemigrations --check --dry-run
-python manage.py test
+python manage.py test --settings=config.test_settings
 ```
 
 Open the page you changed and click through it. Add a screenshot when the change is visible.
@@ -276,13 +340,14 @@ WebTechMidTerm-Exam/
 ├── .env.example          # template — copy to .env
 ├── config/               # settings and the root URL list
 ├── accounts/             # Sam
-├── campus/               # Jackson
+├── campus/               # Jackson — models, migrations, management commands
 ├── gatepass/             # JP
 ├── dashboard/            # JP
 ├── templates/
 │   ├── base.html
 │   ├── public/
 │   ├── accounts/
+│   ├── campus/
 │   └── dashboard/
 └── static/css/
 ```
