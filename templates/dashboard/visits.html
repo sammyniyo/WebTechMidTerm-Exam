@@ -1,0 +1,18 @@
+{% extends "dashboard/index.html" %}
+
+{% block title %}Visitors{% endblock %}
+{% block content %}
+  <main class="admin-shell">
+    <header class="admin-head"><h2>Visitor records</h2><nav class="admin-nav"><a href="{% url 'dashboard:home' %}">Dashboard</a><a href="{% url 'dashboard:gate_log' %}">Gate log</a></nav></header>
+    <section class="admin-panel">
+      <form method="get" role="search" style="display:flex;gap:.5rem;margin-bottom:1rem">
+        <label for="visit-search" class="visually-hidden">Search visitors</label>
+        <input id="visit-search" name="q" value="{{ query }}" placeholder="Name, reference, phone, destination" style="flex:1;min-width:0;padding:.65rem;border:1px solid #cbd5d2">
+        <button type="submit">Search</button>
+      </form>
+      <table class="admin-table"><thead><tr><th>Reference</th><th>Visitor</th><th>Destination</th><th>Created</th><th>Status</th></tr></thead>
+        <tbody>{% for visit in visits %}<tr><td><a class="admin-link" href="{% url 'dashboard:visit_detail' visit.reference_number %}">{{ visit.reference_number }}</a></td><td>{{ visit.full_name }}<br>{{ visit.phone }}</td><td>{{ visit.destination }}</td><td>{{ visit.created_at|date:"M j, Y H:i" }}</td><td><span class="status-tag">{{ visit.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="5">No matching visits.</td></tr>{% endfor %}</tbody>
+      </table>
+    </section>
+  </main>
+{% endblock %}

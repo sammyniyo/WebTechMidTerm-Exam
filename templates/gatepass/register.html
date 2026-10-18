@@ -37,6 +37,7 @@
         </div>
       </dl>
       <a class="again" href="{% url 'gatepass:visitor_register' %}">Register another visit</a>
+      <a class="again" href="{% url 'gatepass:visitor_pass' visit.reference_number %}">View visitor pass</a>
     </article>
   {% else %}
     <form class="card" method="post" novalidate>
