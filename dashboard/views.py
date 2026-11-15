@@ -1,40 +1,222 @@
-from django.apps import apps
+from datetime import timedelta
+
+from django.contrib import messages
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from accounts.decorators import gate_staff_required
+from accounts.models import CheckIn
+from campus.models import Office
+from dashboard.paging import paginate
 from gatepass.models import GateEvent, VisitorVisit
+
+BADGES = {
+    "pending": "warning",
+    "approved": "success",
+    "checked_in": "info",
+    "rejected": "danger",
+    "completed": "success",
+    "accepted": "success",
+}
+
+
+def _initials(name):
+    parts = [part for part in (name or "").split() if part]
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[1][0]).upper()
+    return ((name or "?")[:2]).upper()
+
+
+def _today_bounds():
+    start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    return start, start + timedelta(days=1)
+
+
+def _visit_row(visit):
+    return {
+        "initials": _initials(visit.full_name),
+        "name": visit.full_name,
+        "reference": visit.reference_number,
+        "organization": visit.organization,
+        "destination": visit.destination,
+        "host": visit.host_name,
+        "arrived": timezone.localtime(visit.created_at).strftime("%d %b %Y, %H:%M"),
+        "badge": BADGES.get(visit.status, "info"),
+        "status_label": visit.get_status_display(),
+        "phone": visit.phone,
+        "email": visit.email,
+        "purpose": visit.purpose,
+        "valid_until": timezone.localtime(visit.valid_until).strftime("%d %b %Y, %H:%M"),
+    }
+
+
+def _event_row(event):
+    if event.visit_id:
+        person = event.visit.full_name
+        kind = "Visitor"
+    else:
+        person = event.member.full_name
+        kind = event.member.get_member_type_display()
+    return {
+        "initials": _initials(person),
+        "person": person,
+        "kind": kind,
+        "event": event.get_event_type_display(),
+        "time": timezone.localtime(event.occurred_at).strftime("%d %b %Y, %H:%M"),
+        "clock": timezone.localtime(event.occurred_at).strftime("%H:%M"),
+        "badge": BADGES.get(event.outcome, "info"),
+        "result_label": event.get_outcome_display(),
+        "officer": event.officer.get_username(),
+        "when": event.occurred_at,
+    }
+
+
+def _checkin_rows(check_in):
+    arrived = {
+        "initials": _initials(check_in.member.full_name),
+        "person": check_in.member.full_name,
+        "kind": check_in.member.get_member_type_display(),
+        "event": "Arrival",
+        "time": timezone.localtime(check_in.checked_in_at).strftime("%d %b %Y, %H:%M"),
+        "clock": timezone.localtime(check_in.checked_in_at).strftime("%H:%M"),
+        "badge": "warning" if check_in.status == CheckIn.Status.PENDING else "success",
+        "result_label": "Waiting" if check_in.status == CheckIn.Status.PENDING else "Approved",
+        "officer": "Check-in",
+        "when": check_in.checked_in_at,
+    }
+    rows = [arrived]
+    if check_in.checked_out_at:
+        rows.append(
+            {
+                **arrived,
+                "event": "Checkout",
+                "time": timezone.localtime(check_in.checked_out_at).strftime("%d %b %Y, %H:%M"),
+                "clock": timezone.localtime(check_in.checked_out_at).strftime("%H:%M"),
+                "badge": "info",
+                "result_label": "Checked out",
+                "when": check_in.checked_out_at,
+            }
+        )
+    return rows
+
+
+def _stats():
+    start, end = _today_bounds()
+    visitors = VisitorVisit.objects.filter(created_at__gte=start, created_at__lt=end).count()
+    pending = VisitorVisit.objects.filter(status=VisitorVisit.Status.PENDING).count()
+    gate_entries = GateEvent.objects.filter(
+        event_type=GateEvent.EventType.ENTRY,
+        outcome=GateEvent.Outcome.ACCEPTED,
+        occurred_at__gte=start,
+        occurred_at__lt=end,
+    ).count()
+    member_entries = CheckIn.objects.filter(
+        status__in=(CheckIn.Status.APPROVED, CheckIn.Status.CHECKED_OUT),
+        approved_at__gte=start,
+        approved_at__lt=end,
+    ).count()
+    offices = Office.objects.filter(is_active=True, building__is_active=True).count()
+    return [
+        {"key": "visitors", "label": "Visitors today", "value": visitors, "hint": "Registered today"},
+        {"key": "pending", "label": "Pending", "value": pending, "hint": "Waiting for the desk"},
+        {"key": "entries", "label": "Entries today", "value": gate_entries + member_entries, "hint": "Accepted at the gate"},
+        {"key": "offices", "label": "Active offices", "value": offices, "hint": "Open for visitors"},
+    ], {
+        "visitors_today": visitors,
+        "pending_visits": pending,
+        "entries_today": gate_entries + member_entries,
+        "active_offices": offices,
+    }
+
+
+def _mix():
+    order = (
+        (VisitorVisit.Status.PENDING, "Pending"),
+        (VisitorVisit.Status.APPROVED, "Approved"),
+        (VisitorVisit.Status.CHECKED_IN, "Checked in"),
+        (VisitorVisit.Status.REJECTED, "Rejected"),
+    )
+    counts = []
+    for key, label in order:
+        counts.append(
+            {
+                "key": key,
+                "label": label,
+                "count": VisitorVisit.objects.filter(status=key).count(),
+                "badge": BADGES[key],
+            }
+        )
+    return counts
+
+
+def _trend():
+    start, _end = _today_bounds()
+    hours = list(range(0, 24))
+    counts = {hour: 0 for hour in hours}
+    events = GateEvent.objects.filter(
+        event_type=GateEvent.EventType.ENTRY,
+        outcome=GateEvent.Outcome.ACCEPTED,
+        occurred_at__gte=start,
+    )
+    checkins = CheckIn.objects.filter(
+        status__in=(CheckIn.Status.APPROVED, CheckIn.Status.CHECKED_OUT),
+        approved_at__gte=start,
+    )
+    for event in events:
+        hour = timezone.localtime(event.occurred_at).hour
+        if hour in counts:
+            counts[hour] += 1
+    for check_in in checkins:
+        hour = timezone.localtime(check_in.approved_at).hour
+        if hour in counts:
+            counts[hour] += 1
+    peak = max(counts.values()) or 1
+    bars = []
+    for hour in hours:
+        count = counts[hour]
+        bars.append(
+            {
+                "label": f"{hour:02d}",
+                "count": count,
+                "height": round(count * 100 / peak) if count else 8,
+                "empty": count == 0,
+            }
+        )
+    return bars
 
 
 @gate_staff_required
 def home(request):
-    today = timezone.localdate()
-    offices_model = _office_model()
-    active_offices = (
-        offices_model.objects.filter(is_active=True).count() if offices_model else 0
+    stats, totals = _stats()
+    start, _end = _today_bounds()
+    visits = [_visit_row(visit) for visit in VisitorVisit.objects.all()[:8]]
+    gate_rows = [
+        _event_row(event)
+        for event in GateEvent.objects.select_related("visit", "member", "officer").filter(occurred_at__gte=start)[:12]
+    ]
+    check_rows = []
+    for check_in in CheckIn.objects.select_related("member").filter(checked_in_at__gte=start)[:12]:
+        check_rows.extend(_checkin_rows(check_in))
+    activity = sorted(gate_rows + check_rows, key=lambda row: row["when"], reverse=True)[:8]
+    return render(
+        request,
+        "dashboard/index.html",
+        {
+            "section": "overview",
+            "stats": stats,
+            "visitors": visits[:4],
+            "events": activity,
+            "mix": _mix(),
+            "trend": _trend(),
+            **totals,
+        },
     )
-    context = {
-        "visitors_today": VisitorVisit.objects.filter(created_at__date=today).count(),
-        "pending_visits": VisitorVisit.objects.filter(
-            status=VisitorVisit.Status.PENDING
-        ).count(),
-        "entries_today": GateEvent.objects.filter(
-            event_type=GateEvent.EventType.ENTRY,
-            outcome=GateEvent.Outcome.ACCEPTED,
-            occurred_at__date=today,
-        ).count(),
-        "active_offices": active_offices,
-        "recent_visits": VisitorVisit.objects.all()[:8],
-        "recent_events": GateEvent.objects.select_related(
-            "visit", "member", "officer"
-        )[:8],
-    }
-    return render(request, "dashboard/index.html", context)
 
 
 @gate_staff_required
-def visit_list(request):
+def visitor_list(request):
     query = request.GET.get("q", "").strip()
     visits = VisitorVisit.objects.all()
     if query:
@@ -45,27 +227,41 @@ def visit_list(request):
             | Q(phone__icontains=query)
             | Q(destination__icontains=query)
             | Q(host_name__icontains=query)
+            | Q(organization__icontains=query)
         )
+    page = paginate(request, visits)
     return render(
         request,
-        "dashboard/visits.html",
-        {"visits": visits[:100], "query": query},
+        "dashboard/visitors.html",
+        {
+            "section": "visitors",
+            "visitors": [_visit_row(visit) for visit in page.object_list],
+            "page_obj": page,
+            "query": query,
+        },
     )
 
 
 @gate_staff_required
 def visit_detail(request, reference):
-    visit = get_object_or_404(
-        VisitorVisit.objects.prefetch_related("gate_events"),
-        reference_number=reference,
+    visit = (
+        VisitorVisit.objects.prefetch_related("gate_events__officer")
+        .filter(reference_number=reference)
+        .first()
     )
-    return render(request, "dashboard/visit_detail.html", {"visit": visit})
+    return render(
+        request,
+        "dashboard/visit_detail.html",
+        {"section": "visitors", "visit": visit},
+        status=200 if visit else 404,
+    )
 
 
 @gate_staff_required
 def gate_log(request):
     query = request.GET.get("q", "").strip()
     events = GateEvent.objects.select_related("visit", "member", "officer")
+    checkins = CheckIn.objects.select_related("member")
     if query:
         events = events.filter(
             Q(visit__reference_number__icontains=query)
@@ -75,15 +271,99 @@ def gate_log(request):
             | Q(member__full_name__icontains=query)
             | Q(officer__username__icontains=query)
         )
+        checkins = checkins.filter(
+            Q(member__campus_id__icontains=query) | Q(member__full_name__icontains=query)
+        )
+    rows = [_event_row(event) for event in events]
+    for check_in in checkins:
+        rows.extend(_checkin_rows(check_in))
+    rows.sort(key=lambda row: row["when"], reverse=True)
+    page = paginate(request, rows)
     return render(
         request,
         "dashboard/gate_log.html",
-        {"events": events[:150], "query": query},
+        {"section": "log", "events": page.object_list, "page_obj": page, "query": query},
     )
 
 
-def _office_model():
-    try:
-        return apps.get_model("campus", "Office")
-    except LookupError:
-        return None
+def _stamp(value):
+    if not value:
+        return "—"
+    return timezone.localtime(value).strftime("%d %b %Y, %H:%M")
+
+
+@gate_staff_required
+def check_ins(request):
+    arrivals = []
+    arrival_page = paginate(
+        request,
+        CheckIn.objects.select_related("member").all(),
+    )
+    for check_in in arrival_page.object_list:
+        arrivals.append(
+            {
+                "id": check_in.pk,
+                "initials": _initials(check_in.member.full_name),
+                "name": check_in.member.full_name,
+                "campus_id": check_in.member.campus_id,
+                "kind": check_in.member.get_member_type_display(),
+                "status": check_in.status,
+                "status_label": check_in.get_status_display(),
+                "arrived": _stamp(check_in.checked_in_at),
+                "approved": _stamp(check_in.approved_at),
+                "left": _stamp(check_in.checked_out_at),
+            }
+        )
+    open_visits = VisitorVisit.objects.filter(
+        status__in=(
+            VisitorVisit.Status.PENDING,
+            VisitorVisit.Status.APPROVED,
+            VisitorVisit.Status.CHECKED_IN,
+        )
+    )
+    visit_page = paginate(request, open_visits, key="vpage")
+    return render(
+        request,
+        "dashboard/check_ins.html",
+        {
+            "section": "checkins",
+            "arrivals": arrivals,
+            "arrival_page": arrival_page,
+            "visits": visit_page.object_list,
+            "visit_page": visit_page,
+        },
+    )
+
+
+@gate_staff_required
+@require_POST
+def approve_check_in(request, pk):
+    check_in = get_object_or_404(CheckIn.objects.select_related("member"), pk=pk)
+    if check_in.status != CheckIn.Status.PENDING:
+        messages.error(request, "Only a new arrival can be approved.")
+    else:
+        check_in.status = CheckIn.Status.APPROVED
+        check_in.approved_at = timezone.now()
+        check_in.save(update_fields=["status", "approved_at"])
+        messages.success(
+            request,
+            f"{check_in.member.full_name} approved at {_stamp(check_in.approved_at)}.",
+        )
+    return redirect("dashboard:check_ins")
+
+
+@gate_staff_required
+@require_POST
+def checkout_check_in(request, pk):
+    check_in = get_object_or_404(CheckIn.objects.select_related("member"), pk=pk)
+    if check_in.status != CheckIn.Status.APPROVED:
+        messages.error(request, "Approve the arrival before checkout.")
+    else:
+        check_in.status = CheckIn.Status.CHECKED_OUT
+        check_in.checked_out_at = timezone.now()
+        check_in.save(update_fields=["status", "checked_out_at"])
+        messages.success(
+            request,
+            f"{check_in.member.full_name} checked out at {_stamp(check_in.checked_out_at)}.",
+        )
+    return redirect("dashboard:check_ins")

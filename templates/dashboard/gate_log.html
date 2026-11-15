@@ -1,14 +1,53 @@
-{% extends "dashboard/index.html" %}
+{% extends "dashboard/base_desk.html" %}
+{% load desk_pages %}
 
 {% block title %}Gate log{% endblock %}
+{% block heading %}Gate log{% endblock %}
+
 {% block content %}
-  <main class="admin-shell">
-    <header class="admin-head"><h2>Gate log</h2><nav class="admin-nav"><a href="{% url 'dashboard:home' %}">Dashboard</a><a href="{% url 'dashboard:visit_list' %}">Visitors</a></nav></header>
-    <section class="admin-panel">
-      <form method="get" role="search" style="display:flex;gap:.5rem;margin-bottom:1rem"><label for="event-search" class="visually-hidden">Search gate events</label><input id="event-search" name="q" value="{{ query }}" placeholder="Visitor, reference, campus ID, officer" style="flex:1;min-width:0;padding:.65rem;border:1px solid #cbd5d2"><button type="submit">Search</button></form>
-      <table class="admin-table"><thead><tr><th>Time</th><th>Person</th><th>Type</th><th>Outcome</th><th>Officer</th></tr></thead><tbody>
-        {% for event in events %}<tr><td>{{ event.occurred_at|date:"M j, Y H:i" }}</td><td>{% if event.visit %}<a href="{% url 'dashboard:visit_detail' event.visit.reference_number %}">{{ event.visit.full_name }}</a> · {{ event.visit.reference_number }}{% else %}{{ event.member.full_name }} · {{ event.member.campus_id }}{% endif %}</td><td>{{ event.get_event_type_display }}</td><td>{{ event.get_outcome_display }}</td><td>{{ event.officer.get_username }}</td></tr>{% empty %}<tr><td colspan="5">No matching gate events.</td></tr>{% endfor %}
-      </tbody></table>
-    </section>
-  </main>
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Today and earlier</h2>
+      <form class="gate-search" method="get">
+        <label>
+          <span class="sr">Search the log</span>
+          <input name="q" type="search" value="{{ query }}" placeholder="Name, reference, or officer">
+        </label>
+      </form>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Person</th>
+            <th>Type</th>
+            <th>Event</th>
+            <th class="status">Result</th>
+            <th>Officer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+            <tr>
+              <td class="clock">{{ event.time }}</td>
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ event.initials }}</span>
+                  <span><strong>{{ event.person }}</strong></span>
+                </span>
+              </td>
+              <td><span class="tag">{{ event.kind }}</span></td>
+              <td>{{ event.event }}</td>
+              <td class="status"><span class="pill pill-{{ event.badge }}">{{ event.result_label }}</span></td>
+              <td>{{ event.officer }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No gate events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% pager page_obj %}
+  </section>
 {% endblock %}
