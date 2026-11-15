@@ -1,59 +1,49 @@
+{% extends "dashboard/base_desk.html" %}
 
-{% extends "base.html" %}
-
-{% block title %}Manage Offices | AUCA{% endblock %}
-{% block hero_title %}Office Management{% endblock %}
-{% block hero_sub %}Create, view, update, and delete office records{% endblock %}
+{% block title %}Offices{% endblock %}
+{% block heading %}Offices{% endblock %}
 
 {% block content %}
-<section class="card">
-  {% if messages %}
-    {% for message in messages %}
-      <p>{{ message }}</p>
-    {% endfor %}
-  {% endif %}
-
-  <p>
-    <a href="{% url 'campus:office_create' %}">+ Create New Office</a>
-  </p>
-
-  <h2>Office Records</h2>
-
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>Office</th>
-          <th>Building</th>
-          <th>Floor</th>
-          <th>Room</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for office in offices %}
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Office records</h2>
+      <span class="head-links">
+        <a href="{% url 'campus:building_list' %}">Buildings</a>
+        <a class="mini-btn" href="{% url 'campus:office_create' %}">+ New office</a>
+      </span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
           <tr>
-            <td>{{ office.name }}</td>
-            <td>{{ office.building.name }}</td>
-            <td>{{ office.get_floor_display }}</td>
-            <td>{{ office.room_number }}</td>
-            <td>
-              {% if office.is_active %}Active{% else %}Inactive{% endif %}
-            </td>
-            <td>
-              <a href="{% url 'campus:office_update' office.pk %}">Edit</a>
-              |
-              <a href="{% url 'campus:office_delete' office.pk %}">Delete</a>
-            </td>
+            <th>Office</th>
+            <th>Building</th>
+            <th>Floor</th>
+            <th>Room</th>
+            <th>Status</th>
+            <th class="status">Actions</th>
           </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6">No office records found.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+        </thead>
+        <tbody>
+          {% for office in offices %}
+            <tr>
+              <td><a href="{% url 'campus:office_update' office.pk %}">{{ office.name }}</a></td>
+              <td>{{ office.building.name }}</td>
+              <td>{{ office.get_floor_display }}</td>
+              <td>{{ office.room_number }}</td>
+              <td><span class="pill {% if office.is_active %}pill-success{% else %}pill-danger{% endif %}">{% if office.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+              <td class="status">
+                <span class="row-actions">
+                  <a href="{% url 'campus:office_update' office.pk %}">Edit</a>
+                  <a class="quiet" href="{% url 'campus:office_delete' office.pk %}">Delete</a>
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No office records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 {% endblock %}

@@ -3,70 +3,142 @@
 {% block title %}Overview{% endblock %}
 {% block heading %}Overview{% endblock %}
 
-{% block extra_css %}
-<style>
-  .admin-shell { color: #26343a; }
-  .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.25rem; }
-  .admin-head h2 { margin: 0; font-size: 1.45rem; }
-  .admin-nav { display: flex; gap: .55rem; flex-wrap: wrap; }
-  .admin-nav a, .admin-link { color: #16776d; font-weight: 700; text-decoration: none; }
-  .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
-  .stat-box { padding: 1rem; border-left: 4px solid #188577; background: #fff; box-shadow: 0 2px 7px #182f3212; }
-  .stat-box:nth-child(2) { border-color: #d78c26; }
-  .stat-box:nth-child(3) { border-color: #36759a; }
-  .stat-box:nth-child(4) { border-color: #66756c; }
-  .stat-label { color: #69777b; font-size: .82rem; }
-  .stat-number { margin-top: .2rem; font-size: 1.8rem; font-weight: 800; }
-  .admin-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .admin-panel { min-width: 0; padding: 1rem; background: #fff; box-shadow: 0 2px 7px #182f3212; }
-  .admin-panel h3 { margin: 0 0 .8rem; font-size: 1rem; }
-  .admin-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-  .admin-table th, .admin-table td { padding: .55rem .4rem; border-bottom: 1px solid #e5eae8; text-align: left; vertical-align: top; }
-  .admin-table th { color: #687579; font-size: .75rem; text-transform: uppercase; }
-  .status-tag { display: inline-block; padding: .16rem .4rem; background: #edf3ef; color: #38534a; font-size: .78rem; }
-  @media (max-width: 760px) { .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-columns { grid-template-columns: 1fr; } }
-</style>
-{% endblock %}
-
 {% block content %}
-  <main class="admin-shell">
-    <header class="admin-head">
-      <h2>Gate operations</h2>
-      <nav class="admin-nav" aria-label="Gate management">
-        <a href="{% url 'dashboard:visit_list' %}">Visitors</a>
-        <a href="{% url 'dashboard:gate_log' %}">Gate log</a>
-        <a href="{% url 'admin:index' %}">Administration</a>
-      </nav>
-    </header>
-    <section class="stat-grid" aria-label="Today's totals">
-      <div class="stat-box"><div class="stat-label">Visitors today</div><div class="stat-number">{{ visitors_today }}</div></div>
-      <div class="stat-box"><div class="stat-label">Pending visits</div><div class="stat-number">{{ pending_visits }}</div></div>
-      <div class="stat-box"><div class="stat-label">Entries today</div><div class="stat-number">{{ entries_today }}</div></div>
-      <div class="stat-box"><div class="stat-label">Active offices</div><div class="stat-number">{{ active_offices }}</div></div>
+  <section class="stat-grid" aria-label="Today">
+    {% for stat in stats %}
+      <article class="stat stat-{{ stat.key }}">
+        <div class="stat-body">
+          <span class="stat-icon" aria-hidden="true">
+            {% if stat.key == "visitors" %}
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.6-2.6 2.8-4 5.5-4s4.9 1.4 5.5 4"></path><circle cx="17" cy="9" r="2.2"></circle><path d="M16 15.2c1.8.3 3.2 1.4 3.8 3.3"></path></svg>
+            {% elif stat.key == "pending" %}
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
+            {% elif stat.key == "entries" %}
+              <svg viewBox="0 0 24 24"><path d="M5 20V8l7-4 7 4v12"></path><path d="M10 20v-6h4v6"></path></svg>
+            {% else %}
+              <svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"></path><path d="M9 20v-5h6v5"></path></svg>
+            {% endif %}
+          </span>
+          <div>
+            <p>{{ stat.label }}</p>
+            <strong>{{ stat.value }}</strong>
+          </div>
+        </div>
+        <span class="stat-hint">{{ stat.hint }}</span>
+        {% if stat.key == "entries" %}
+          <a href="{% url 'dashboard:gate_log' %}">Open the log</a>
+        {% elif stat.key == "offices" %}
+          <a href="{% url 'campus:office_list' %}">See offices</a>
+        {% elif stat.key == "pending" %}
+          <a href="{% url 'dashboard:check_ins' %}">Open check-in</a>
+        {% else %}
+          <a href="{% url 'dashboard:visitor_list' %}">See visitors</a>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </section>
+
+  <div class="gate-split charts">
+    <section class="panel mix-panel">
+      <div class="panel-head">
+        <h2>Visitor status</h2>
+        <span>All visits</span>
+      </div>
+      <div class="stack" style="grid-template-columns: {% for row in mix %}{% if row.count %}{{ row.count }}fr {% endif %}{% endfor %};">
+        {% for row in mix %}
+          {% if row.count %}
+            <span class="stack-{{ row.key }}" title="{{ row.label }} {{ row.count }}"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <ul class="legend">
+        {% for row in mix %}
+          <li>
+            <i class="dot dot-{{ row.key }}"></i>
+            {{ row.label }}
+            <strong>{{ row.count }}</strong>
+          </li>
+        {% endfor %}
+      </ul>
     </section>
-    <section class="admin-columns">
-      <div class="admin-panel">
-        <h3>Recent visitors</h3>
-        <table class="admin-table">
-          <thead><tr><th>Visitor</th><th>Destination</th><th>Status</th></tr></thead>
+
+    <section class="panel trend-panel">
+      <div class="panel-head">
+        <h2>Check-in trend</h2>
+        <a href="{% url 'dashboard:gate_log' %}">Full log</a>
+      </div>
+      <div class="trend" aria-label="Accepted check-ins by hour">
+        {% for bar in trend %}
+          <div class="trend-col{% if bar.empty %} is-empty{% endif %}">
+            <span class="trend-value">{% if bar.count %}{{ bar.count }}{% endif %}</span>
+            <span class="trend-bar" style="height: {{ bar.height }}%"></span>
+            <span class="trend-hour">{{ bar.label }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="gate-split">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Latest visitors</h2>
+        <a href="{% url 'dashboard:visitor_list' %}">View all</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Visitor</th>
+              <th>Going to</th>
+              <th class="status">Status</th>
+            </tr>
+          </thead>
           <tbody>
-            {% for visit in recent_visits %}
-              <tr><td><a class="admin-link" href="{% url 'dashboard:visit_detail' visit.reference_number %}">{{ visit.full_name }}</a><br>{{ visit.reference_number }}</td><td>{{ visit.destination }}</td><td><span class="status-tag">{{ visit.get_status_display }}</span></td></tr>
-            {% empty %}<tr><td colspan="3">No visits recorded yet.</td></tr>{% endfor %}
+            {% for visit in visitors %}
+              <tr>
+                <td>
+                  <span class="who">
+                    <span class="avatar">{{ visit.initials }}</span>
+                    <span>
+                      <a href="{% url 'dashboard:visit_detail' visit.reference %}">{{ visit.name }}</a>
+                      <small>{{ visit.reference }}</small>
+                    </span>
+                  </span>
+                </td>
+                <td>{{ visit.destination }}</td>
+                <td class="status"><span class="pill pill-{{ visit.badge }}">{{ visit.status_label }}</span></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3">No visitors yet.</td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="admin-panel">
-        <h3>Recent gate activity</h3>
-        <table class="admin-table">
-          <thead><tr><th>Time</th><th>Person</th><th>Event</th><th>Outcome</th></tr></thead>
-          <tbody>
-            {% for event in recent_events %}
-              <tr><td>{{ event.occurred_at|date:"H:i" }}</td><td>{% if event.visit %}{{ event.visit.full_name }}{% else %}{{ event.member.full_name }}{% endif %}</td><td>{{ event.get_event_type_display }}</td><td><span class="status-tag">{{ event.get_outcome_display }}</span></td></tr>
-            {% empty %}<tr><td colspan="4">No gate events recorded yet.</td></tr>{% endfor %}
-          </tbody>
-        </table>
-      </div>
     </section>
-  </main>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Gate activity</h2>
+        <a href="{% url 'dashboard:gate_log' %}">Full log</a>
+      </div>
+      <ol class="activity">
+        {% for event in events %}
+          <li>
+            <span class="avatar">{{ event.initials }}</span>
+            <div>
+              <strong>{{ event.person }}</strong>
+              <span>{{ event.kind }} · {{ event.event }}</span>
+            </div>
+            <div class="activity-end">
+              <time>{{ event.clock }}</time>
+              <em class="pill pill-{{ event.badge }}">{{ event.result_label }}</em>
+            </div>
+          </li>
+        {% empty %}
+          <li>No gate activity yet.</li>
+        {% endfor %}
+      </ol>
+    </section>
+  </div>
 {% endblock %}

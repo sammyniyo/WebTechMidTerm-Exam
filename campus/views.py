@@ -46,7 +46,7 @@ def office_list(request):
     return render(
         request,
         "campus/office_list.html",
-        {"offices": offices},
+        {"offices": offices, "section": "offices"},
     )
 
 
@@ -65,7 +65,7 @@ def office_create(request):
     return render(
         request,
         "campus/office_form.html",
-        {"form": form, "page_title": "Create Office"},
+        {"form": form, "page_title": "Create office", "section": "offices"},
     )
 
 
@@ -86,7 +86,7 @@ def office_update(request, pk):
     return render(
         request,
         "campus/office_form.html",
-        {"form": form, "page_title": "Update Office"},
+        {"form": form, "page_title": "Update office", "section": "offices"},
     )
 
 
@@ -103,7 +103,7 @@ def office_delete(request, pk):
     return render(
         request,
         "campus/office_confirm_delete.html",
-        {"office": office},
+        {"office": office, "section": "offices"},
     )
 
 
@@ -114,5 +114,5 @@ def building_list(request):
     return render(
         request,
         "campus/building_list.html",
-        {"buildings": buildings},
+        {"buildings": buildings, "section": "offices"},
     )

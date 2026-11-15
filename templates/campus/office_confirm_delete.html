@@ -1,25 +1,20 @@
+{% extends "dashboard/base_desk.html" %}
 
-{% extends "base.html" %}
-
-{% block title %}Delete Office | AUCA{% endblock %}
-{% block hero_title %}Confirm Office Deletion{% endblock %}
-{% block hero_sub %}Please confirm this action{% endblock %}
+{% block title %}Delete office{% endblock %}
+{% block heading %}Delete office{% endblock %}
 
 {% block content %}
-<section class="card">
-  <h2>Delete {{ office.name }}?</h2>
-
-  <p>
-    Are you sure you want to delete
-    <strong>{{ office.name }}</strong>,
-    room {{ office.room_number }},
-    in {{ office.building.name }}?
-  </p>
-
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">Yes, Delete Office</button>
-    <a href="{% url 'campus:office_list' %}">Cancel</a>
-  </form>
-</section>
+  <p class="back"><a href="{% url 'campus:office_list' %}">Back to offices</a></p>
+  <section class="panel">
+    <div class="panel-head"><h2>Delete {{ office.name }}?</h2></div>
+    <p class="gate-note">
+      This removes <strong>{{ office.name }}</strong>, room {{ office.room_number }},
+      in {{ office.building.name }}. Visitors will no longer be able to choose it.
+    </p>
+    <form class="actions" method="post">
+      {% csrf_token %}
+      <button type="submit" class="danger">Yes, delete office</button>
+      <a href="{% url 'campus:office_list' %}">Cancel</a>
+    </form>
+  </section>
 {% endblock %}

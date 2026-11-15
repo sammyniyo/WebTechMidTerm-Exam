@@ -1,37 +1,31 @@
+{% extends "dashboard/base_desk.html" %}
 
-{% extends "base.html" %}
-
-{% block title %}{{ page_title }} | AUCA{% endblock %}
-{% block hero_title %}{{ page_title }}{% endblock %}
-{% block hero_sub %}Enter the office information below{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block heading %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<section class="card">
-  <form method="post">
-    {% csrf_token %}
-
-    {{ form.non_field_errors }}
-
-    {% for field in form %}
-      <div style="margin-bottom: 16px;">
-        <label for="{{ field.id_for_label }}">
-          {{ field.label }}
-        </label>
-
-        <div>{{ field }}</div>
-
-        {% if field.help_text %}
-          <small>{{ field.help_text }}</small>
-        {% endif %}
-
-        {% for error in field.errors %}
-          <p style="color: red;">{{ error }}</p>
-        {% endfor %}
+  <p class="back"><a href="{% url 'campus:office_list' %}">Back to offices</a></p>
+  <section class="panel">
+    <form class="desk-form" method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      {% endif %}
+      <div class="desk-grid">
+        {% include "dashboard/_member_field.html" with field=form.name %}
+        {% include "dashboard/_member_field.html" with field=form.building %}
+        {% include "dashboard/_member_field.html" with field=form.floor %}
+        {% include "dashboard/_member_field.html" with field=form.room_number %}
       </div>
-    {% endfor %}
-
-    <button type="submit">Save Office</button>
-    <a href="{% url 'campus:office_list' %}">Cancel</a>
-  </form>
-</section>
+      {% include "dashboard/_member_field.html" with field=form.directions %}
+      {% if form.directions.help_text %}<small class="field-help">{{ form.directions.help_text }}</small>{% endif %}
+      <label class="field check-field" for="{{ form.is_active.id_for_label }}">
+        {{ form.is_active }} Active: visitors can choose this office
+      </label>
+      <div class="actions">
+        <button type="submit">Save office</button>
+        <a href="{% url 'campus:office_list' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
 {% endblock %}
