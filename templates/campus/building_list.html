@@ -1,40 +1,26 @@
-{% extends "dashboard/base_desk.html" %}
 
-{% block title %}Buildings{% endblock %}
-{% block heading %}Buildings{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Buildings | AUCA{% endblock %}
+{% block hero_title %}Campus Buildings{% endblock %}
+{% block hero_sub %}Buildings registered in the directory{% endblock %}
 
 {% block content %}
-  <section class="panel">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Building</th>
-            <th>Offices</th>
-            <th class="status">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for building in buildings %}
-            <tr>
-              <td>
-                {{ building.name }}
-                <small>{{ building.description|default:"No description yet." }}</small>
-              </td>
-              <td class="clock">{{ building.offices.count }}</td>
-              <td class="status">
-                {% if building.is_active %}
-                  <span class="pill pill-success">Active</span>
-                {% else %}
-                  <span class="pill pill-danger">Inactive</span>
-                {% endif %}
-              </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="3">No buildings have been registered yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
+<section class="card">
+  <h2>Buildings</h2>
+
+  {% for building in buildings %}
+    <article class="card">
+      <h3>{{ building.name }}</h3>
+      <p>{{ building.description|default:"No description provided." }}</p>
+      <p>
+        <strong>Status:</strong>
+        {% if building.is_active %}Active{% else %}Inactive{% endif %}
+      </p>
+      <p>Number of offices: {{ building.offices.count }}</p>
+    </article>
+  {% empty %}
+    <p>No buildings have been registered yet.</p>
+  {% endfor %}
+</section>
 {% endblock %}

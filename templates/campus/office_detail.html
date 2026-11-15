@@ -1,14 +1,23 @@
+
 {% extends "base.html" %}
 
-{% block title %}{{ office.name }}{% endblock %}
-{% block hero_title %}{{ office.name }}{% endblock %}
-{% block hero_sub %}{{ office.building.name }}{% endblock %}
-{% block hero_note %}Room {{ office.room_number }} · {{ office.get_floor_display }}{% endblock %}
+{% block title %}Office Directions | AUCA{% endblock %}
+{% block hero_title %}Office Directions{% endblock %}
+{% block hero_sub %}Find your destination on campus{% endblock %}
 
 {% block content %}
-  <article class="card">
-    <h2>How to find this office</h2>
-    <p class="lede">{{ office.directions|linebreaksbr }}</p>
-    <a class="again" href="{% url 'campus:office_directory' %}">Back to the directory</a>
-  </article>
+<section class="card">
+  <h2>{{ office.name }}</h2>
+
+  <p><strong>Building:</strong> {{ office.building.name }}</p>
+  <p><strong>Floor:</strong> {{ office.get_floor_display }}</p>
+  <p><strong>Room:</strong> {{ office.room_number }}</p>
+
+  <h3>How to find this office</h3>
+  <p>{{ office.directions|linebreaksbr }}</p>
+
+  <a href="{% url 'campus:office_directory' %}">
+    Back to directory
+  </a>
+</section>
 {% endblock %}

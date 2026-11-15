@@ -1,21 +1,27 @@
+
 {% extends "base.html" %}
 
-{% block title %}Office directory{% endblock %}
-{% block hero_title %}Find an office{% endblock %}
-{% block hero_sub %}Active rooms on campus{% endblock %}
-{% block hero_note %}Choose an office to see how to get there{% endblock %}
+{% block title %}Office Directory | AUCA{% endblock %}
+{% block hero_title %}Campus Office Directory{% endblock %}
+{% block hero_sub %}Find an office, floor, and room{% endblock %}
+{% block hero_note %}Select an office to view directions.{% endblock %}
 
 {% block content %}
+<section class="card">
+  <h2>Available Offices</h2>
+
   {% for office in offices %}
     <article class="card">
-      <h2>{{ office.name }}</h2>
-      <p class="lede">{{ office.building.name }} · {{ office.get_floor_display }} · Room {{ office.room_number }}</p>
-      <a class="again" href="{% url 'campus:office_detail' office.pk %}">View directions</a>
+      <h3>{{ office.name }}</h3>
+      <p><strong>Building:</strong> {{ office.building.name }}</p>
+      <p><strong>Floor:</strong> {{ office.get_floor_display }}</p>
+      <p><strong>Room:</strong> {{ office.room_number }}</p>
+      <a href="{% url 'campus:office_detail' office.pk %}">
+        View directions
+      </a>
     </article>
   {% empty %}
-    <article class="card">
-      <h2>No offices yet</h2>
-      <p class="lede">Active offices will appear here.</p>
-    </article>
+    <p>No active offices are currently available.</p>
   {% endfor %}
+</section>
 {% endblock %}
