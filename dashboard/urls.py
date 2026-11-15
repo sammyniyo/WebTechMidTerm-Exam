@@ -1,5 +1,7 @@
 from django.urls import path
 
+from accounts import desk
+from analytics import views as analytics_views
 from . import views
 
 app_name = "dashboard"

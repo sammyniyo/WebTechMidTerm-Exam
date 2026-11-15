@@ -1,3 +1,1 @@
-from django.contrib import admin
-
-# Register your models here.
+"""Dashboard pages are not managed in Django admin."""

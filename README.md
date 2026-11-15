@@ -58,6 +58,8 @@ The full checklist for each person is in [TASKS.md](TASKS.md).
 | `/api/accounts/members/` | `accounts` | Sam. Signed-in security staff only. |
 | Office directory | `campus` | Jackson |
 | `/visitor/` | `gatepass` | JP |
+| `/visitor/pass/<reference>/qr.svg` | `gatepass` | Visitor pass QR. Officers who scan it land on the visit's desk page. |
+| `/visitor/gate-poster/` | `gatepass` | Printable gate poster. Its QR opens the visitor form. Staff only. |
 | `/dashboard/` | `dashboard` | JP |
 | `/admin/` | Django admin | Shared |
 
@@ -226,6 +228,26 @@ Run `python manage.py test --settings=config.test_settings campus` to test the
 campus views, forms, access restrictions, sample-data command, and JSON API.
 These test settings use an in-memory SQLite database, so tests do not require
 access to the hosted MySQL database or permission to create a MySQL test database.
+
+### Demo accounts
+
+For a demonstration, one command builds a local SQLite database with sample data, trained models, and two demo accounts:
+
+```bash
+DB_ENGINE=sqlite python manage.py setup_demo
+DB_ENGINE=sqlite python manage.py runserver
+```
+
+On Windows PowerShell, set the variable first: `$env:DB_ENGINE = "sqlite"`, then run `python manage.py setup_demo` and `python manage.py runserver`.
+
+| Role | Username | Password | Can do |
+| --- | --- | --- | --- |
+| Administrator | `admin` | `admin12345` | Everything, including Django admin and retraining the models |
+| Security officer | `officer` | `officer12345` | Desk pages: visitors, check-in, gate log, insights |
+
+Sign in at http://127.0.0.1:8000/login/, then open http://127.0.0.1:8000/dashboard/insights/.
+
+These accounts are for local demos only. `setup_demo` refuses to run against the shared MySQL database, and it never resets the password of an account that already exists.
 
 ### Database
 

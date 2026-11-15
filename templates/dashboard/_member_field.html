@@ -1,0 +1,7 @@
+<label class="field" for="{{ field.id_for_label }}">
+  {{ field.label }}
+  {{ field }}
+  {% for error in field.errors %}
+    <span class="field-error">{{ error }}</span>
+  {% endfor %}
+</label>

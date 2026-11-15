@@ -1,0 +1,132 @@
+{% extends "dashboard/base_desk.html" %}
+{% load desk_pages %}
+
+{% block title %}Check-in{% endblock %}
+{% block heading %}Check-in{% endblock %}
+
+{% block content %}
+  <p class="gate-note">
+    Add or edit students and staff on the
+    <a href="{% url 'dashboard:member_list' %}">People</a> page.
+    This desk approves an arrival and records checkout. The phone form is
+    <a href="{% url 'accounts:verify' %}">campus ID check-in</a>.
+  </p>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Students and staff</h2>
+      <span>Arrival, approval, and checkout times</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Person</th>
+            <th>Campus ID</th>
+            <th>Type</th>
+            <th>Arrived</th>
+            <th>Approved</th>
+            <th>Checked out</th>
+            <th class="status">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in arrivals %}
+            <tr>
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ row.initials }}</span>
+                  <span><strong>{{ row.name }}</strong></span>
+                </span>
+              </td>
+              <td><span class="ref">{{ row.campus_id }}</span></td>
+              <td><span class="tag">{{ row.kind }}</span></td>
+              <td class="clock">{{ row.arrived }}</td>
+              <td class="clock">{{ row.approved }}</td>
+              <td class="clock">{{ row.left }}</td>
+              <td class="status">
+                {% if row.status == "pending" %}
+                  <form class="actions" method="post" action="{% url 'dashboard:approve_check_in' row.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Approve</button>
+                  </form>
+                {% elif row.status == "approved" %}
+                  <form class="actions" method="post" action="{% url 'dashboard:checkout_check_in' row.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Checkout</button>
+                  </form>
+                {% else %}
+                  <span class="pill pill-info">{{ row.status_label }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7">No campus check-ins yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% pager arrival_page %}
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Visitors at the gate</h2>
+      <a href="{% url 'dashboard:visitor_list' %}">All visitors</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Visitor</th>
+            <th>Going to</th>
+            <th>Arrived</th>
+            <th class="status">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in visits %}
+            <tr>
+              <td>
+                <span class="who">
+                  <span class="avatar">{{ visit.full_name|slice:":1" }}</span>
+                  <span>
+                    <a href="{% url 'dashboard:visit_detail' visit.reference_number %}">{{ visit.full_name }}</a>
+                    <small>{{ visit.reference_number }}</small>
+                  </span>
+                </span>
+              </td>
+              <td>{{ visit.destination }}</td>
+              <td class="clock">{{ visit.created_at|date:"d M Y, H:i" }}</td>
+              <td class="status">
+                {% if visit.status == "pending" %}
+                  <form class="actions" method="post" action="{% url 'gatepass:review_visit' visit.reference_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'dashboard:check_ins' %}">
+                    <button type="submit" name="decision" value="approve">Approve</button>
+                    <button type="submit" class="quiet" name="decision" value="reject">Reject</button>
+                  </form>
+                {% elif visit.status == "approved" %}
+                  <form class="actions" method="post" action="{% url 'gatepass:record_gate_event' visit.reference_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'dashboard:check_ins' %}">
+                    <button type="submit" name="event_type" value="entry">Record entry</button>
+                  </form>
+                {% elif visit.status == "checked_in" %}
+                  <form class="actions" method="post" action="{% url 'gatepass:record_gate_event' visit.reference_number %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'dashboard:check_ins' %}">
+                    <button type="submit" name="event_type" value="exit">Checkout</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4">No visitors waiting at the gate.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% pager visit_page "vpage" %}
+  </section>
+{% endblock %}

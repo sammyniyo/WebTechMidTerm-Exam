@@ -1,0 +1,29 @@
+{% extends "dashboard/base_desk.html" %}
+{% load static %}
+
+{% block title %}Gate QR{% endblock %}
+{% block heading %}Gate QR poster{% endblock %}
+
+{% block content %}
+  <div class="poster-tools">
+    <p class="gate-note">Print this poster and place it at the gate. Visitors scan it to register on their phone, then show the pass QR they receive to the officer.</p>
+    <div class="actions">
+      <button type="button" onclick="window.print()">Print poster</button>
+      <a href="{% url 'gatepass:gate_qr' %}?download=1" download>Download QR (SVG)</a>
+    </div>
+  </div>
+
+  <section class="poster">
+    <img class="poster-logo" src="{% static 'img/auca-logo.png' %}" alt="AUCA">
+    <p class="poster-kicker">Adventist University of Central Africa</p>
+    <h2>Visitor check-in</h2>
+    <p class="poster-sub">Scan with your phone camera to register your visit.</p>
+    <img class="poster-qr" src="{% url 'gatepass:gate_qr' %}" alt="QR code that opens the visitor registration form" width="320" height="320">
+    <ol class="poster-steps">
+      <li>Scan the code and fill in the short form.</li>
+      <li>Keep the pass QR code you receive.</li>
+      <li>Show it to security. They scan it to let you in.</li>
+    </ol>
+    <p class="poster-url">{{ register_url }}</p>
+  </section>
+{% endblock %}

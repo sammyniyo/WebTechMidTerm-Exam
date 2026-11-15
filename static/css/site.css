@@ -246,14 +246,39 @@ input[type="email"] {
   font-weight: 500;
 }
 
+.field select {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.85rem 2.4rem 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  background-color: var(--field);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%235a7190' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 0.75rem;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 input::placeholder { color: #8aa0b5; }
 
-input:focus {
+input:focus,
+select:focus {
   outline: 3px solid rgba(0, 88, 184, 0.16);
   border-color: var(--blue);
-  background: white;
-  transition: border-color 0.2s ease, background 0.2s ease, outline-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, outline-color 0.2s ease;
 }
+
+input:focus { background: white; }
+
+select:focus { background-color: white; }
 
 .hint { margin-top: 0.4rem; font-size: 0.84rem; font-weight: 500; }
 .field > .hint { display: block; }
@@ -480,3 +505,92 @@ nav a:hover { background-size: 100% 1px; }
     transition: none !important;
   }
 }
+
+.web-auth {
+  min-height: 100vh;
+  background: #e8f1fa;
+}
+
+.auth-split {
+  display: grid;
+  grid-template-columns: minmax(22rem, 0.9fr) minmax(24rem, 1.1fr);
+  min-height: 100vh;
+}
+
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3.5rem 3.2rem;
+  background: #0c3a66;
+  color: #d7e7f6;
+}
+
+.auth-logo {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: white;
+}
+
+.auth-kicker {
+  margin: 1.4rem 0 0.4rem;
+  color: #9ec4e4;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.auth-brand h1 {
+  margin: 0;
+  color: white;
+  font-size: 2.2rem;
+}
+
+.auth-brand p {
+  max-width: 26rem;
+  margin: 0.8rem 0 0;
+  font-size: 1.02rem;
+}
+
+.auth-meta {
+  margin-top: 0.35rem !important;
+  color: #b7d0e8;
+  font-size: 0.9rem !important;
+}
+
+.auth-panel {
+  display: grid;
+  place-items: center;
+  padding: 2.5rem;
+}
+
+.auth-card {
+  width: min(26rem, 100%);
+  padding: 1.6rem 1.5rem 1.4rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.auth-card h2 { font-size: 1.45rem; }
+
+.auth-back {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: var(--blue-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-brand { padding: 2rem 1.4rem; }
+  .auth-panel { padding: 1.4rem; }
+}
+
+/* Visitor pass QR */
+.qr-box { display: grid; justify-items: center; gap: 0.45rem; margin: 1rem 0 0.4rem; padding: 1rem; border: 1px dashed #b7d0e8; border-radius: 1rem; background: white; text-align: center; }
+.qr-box img { width: 180px; height: 180px; image-rendering: pixelated; }
+.qr-box figcaption { color: #5a7190; font-size: 0.88rem; }
+.qr-save { color: #0058b8; font-weight: 600; font-size: 0.88rem; }

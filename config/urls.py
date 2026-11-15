@@ -16,6 +16,7 @@ urlpatterns = [
     path("", include("campus.urls")),
     path("", include("gatepass.urls")),
     path("dashboard/", include("dashboard.urls")),
+    path("api/analytics/", include("analytics.urls")),
 ]
 
 if settings.DEBUG:

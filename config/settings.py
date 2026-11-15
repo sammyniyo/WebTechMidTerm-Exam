@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'campus',
     'gatepass',
     'dashboard',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.gate_access',
             ],
         },
     },
@@ -108,6 +110,14 @@ DATABASES = {
         },
     }
 }
+
+# DB_ENGINE=sqlite runs the whole project locally without the shared MySQL
+# server. It is also used automatically when no MySQL database is configured.
+if os.getenv("DB_ENGINE", "").lower() == "sqlite" or not os.getenv("DB_NAME"):
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3"),
+    }
 
 if "test" in sys.argv:
     DATABASES["default"] = {
@@ -160,6 +170,32 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard:home'
 LOGOUT_REDIRECT_URL = 'home'
+
+# QR codes encode this address when set, e.g. http://192.168.1.20:8000, so a
+# phone on the same Wi-Fi can open them. Empty means the address in the browser.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "")
+
+# Machine learning (analytics app)
+# Trained models are saved here as joblib files. The folder is git-ignored;
+# run `python manage.py setup_demo` or `python manage.py train_models`.
+ML_MODEL_DIR = Path(os.getenv("ML_MODEL_DIR", BASE_DIR / "ml_models"))
+
+# Scripts and other services call the analytics API with this token in an
+# `Authorization: Token <value>` header. Signed-in desk staff need no token.
+ANALYTICS_API_TOKEN = os.getenv("ANALYTICS_API_TOKEN", "")
+
+# Open-Meteo (free, no key) supplies Kigali weather. Set to False offline;
+# the system then falls back to a seasonal weather estimate.
+WEATHER_API_ENABLED = os.getenv("WEATHER_API_ENABLED", "True") == "True"
+CAMPUS_LATITUDE = float(os.getenv("CAMPUS_LATITUDE", "-1.9441"))
+CAMPUS_LONGITUDE = float(os.getenv("CAMPUS_LONGITUDE", "30.0619"))
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"analytics": {"handlers": ["console"], "level": "INFO"}},
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -1,0 +1,15 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if previous %}
+    <a href="?{{ previous }}">Previous</a>
+  {% else %}
+    <span>Previous</span>
+  {% endif %}
+  <strong>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</strong>
+  {% if next %}
+    <a href="?{{ next }}">Next</a>
+  {% else %}
+    <span>Next</span>
+  {% endif %}
+</nav>
+{% endif %}

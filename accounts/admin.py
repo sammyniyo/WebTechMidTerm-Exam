@@ -31,5 +31,5 @@ class CampusMemberAdmin(admin.ModelAdmin):
 
 @admin.register(CheckIn)
 class CheckInAdmin(admin.ModelAdmin):
-    list_display = ("member", "checked_in_at")
+    list_display = ("member", "status", "checked_in_at", "approved_at", "checked_out_at")
     search_fields = ("member__campus_id", "member__full_name")

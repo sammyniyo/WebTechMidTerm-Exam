@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Staff desk{% endblock %} · AUCA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body class="web-auth">
+  <div class="auth-split">
+    <section class="auth-brand">
+      <img class="auth-logo" src="{% static 'img/auca-logo.png' %}" alt="AUCA">
+      <p class="auth-kicker">Adventist University of Central Africa</p>
+      <h1>Staff desk</h1>
+      <p>Officers and administrators sign in on a computer at the desk. Visitors use the check-in on a phone.</p>
+      <p class="auth-meta">Masoro Campus, Gasabo District, Kigali</p>
+      <p class="auth-meta">Gishushu Campus</p>
+    </section>
+    <section class="auth-panel">
+      {% block panel %}{% endblock %}
+    </section>
+  </div>
+</body>
+</html>

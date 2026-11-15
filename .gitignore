@@ -18,3 +18,6 @@ staticfiles/
 .DS_Store
 .idea/
 .vscode/
+
+# Trained machine-learning models (rebuild with manage.py train_models)
+ml_models/

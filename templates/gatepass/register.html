@@ -36,6 +36,12 @@
           <dd>{{ visit.get_status_display }}</dd>
         </div>
       </dl>
+      <figure class="qr-box">
+        <img src="{% url 'gatepass:visitor_qr' visit.reference_number %}" alt="QR code for visit {{ visit.reference_number }}" width="180" height="180">
+        <figcaption>Show this code at the gate. Security scans it to check you in.</figcaption>
+        <a class="qr-save" href="{% url 'gatepass:visitor_qr' visit.reference_number %}?download=1" download>Save QR code</a>
+      </figure>
+      <a class="again" href="{% url 'gatepass:visitor_pass' visit.reference_number %}">View visitor pass</a>
       <a class="again" href="{% url 'gatepass:visitor_register' %}">Register another visit</a>
       <a class="again" href="{% url 'gatepass:visitor_pass' visit.reference_number %}">View visitor pass</a>
     </article>
@@ -52,6 +58,13 @@
       {% include "gatepass/_field.html" with field=form.phone %}
       {% include "gatepass/_field.html" with field=form.email hint="Optional. Used only if the desk needs to reach you." %}
       {% include "gatepass/_field.html" with field=form.organization %}
+      <label class="field" for="id_building">
+        Building
+        <select id="id_building" name="building">
+          <option value="">Loading buildings…</option>
+        </select>
+        <span class="hint" id="building-status">Offices load after you choose a building.</span>
+      </label>
       {% include "gatepass/_field.html" with field=form.destination %}
       {% include "gatepass/_field.html" with field=form.host_name hint="Optional." %}
       {% include "gatepass/_field.html" with field=form.purpose hint="Optional." %}
@@ -59,5 +72,75 @@
       <button type="submit">Check in</button>
       <a class="again" href="{% url 'accounts:verify' %}">I have a campus ID</a>
     </form>
+    <script>
+      (function () {
+        var buildingsUrl = "{% url 'campus:api_buildings' %}";
+        var officesUrl = "{% url 'campus:api_offices' %}";
+        var buildingSelect = document.getElementById("id_building");
+        var officeSelect = document.getElementById("id_destination");
+        var status = document.getElementById("building-status");
+        if (!buildingSelect || !officeSelect) return;
+        var offices = [];
+        var savedOffice = officeSelect.getAttribute("data-selected") || "";
+
+        function option(value, label) {
+          var item = document.createElement("option");
+          item.value = value;
+          item.textContent = label;
+          return item;
+        }
+
+        function isSample(row) {
+          var name = row.name || "";
+          var note = row.description || row.directions || "";
+          return name.indexOf("Sample ") === 0 || note.indexOf("SAMPLE DATA") === 0;
+        }
+
+        function fillOffices(buildingId) {
+          var rows = offices.filter(function (office) {
+            return !buildingId || String(office.building.id) === String(buildingId);
+          });
+          officeSelect.replaceChildren(option("", rows.length ? "Choose an office" : "No offices in this building"));
+          rows.forEach(function (office) {
+            var label = office.name + " · " + office.floor_display + " · Room " + office.room_number;
+            var item = option(office.name, label);
+            if (office.name === savedOffice) item.selected = true;
+            officeSelect.appendChild(item);
+          });
+        }
+
+        buildingSelect.addEventListener("change", function () {
+          savedOffice = "";
+          fillOffices(buildingSelect.value);
+        });
+
+        Promise.all([
+          fetch(buildingsUrl).then(function (response) { return response.json(); }),
+          fetch(officesUrl).then(function (response) { return response.json(); })
+        ]).then(function (payload) {
+          var buildings = (payload[0].results || []).filter(function (building) {
+            return !isSample(building);
+          });
+          offices = (payload[1].results || []).filter(function (office) {
+            return !isSample(office);
+          });
+          buildingSelect.replaceChildren(option("", buildings.length ? "Choose a building" : "No buildings yet"));
+          buildings.forEach(function (building) {
+            buildingSelect.appendChild(option(String(building.id), building.name));
+          });
+          if (savedOffice) {
+            var match = offices.find(function (office) { return office.name === savedOffice; });
+            if (match) buildingSelect.value = String(match.building.id);
+          }
+          fillOffices(buildingSelect.value);
+          status.textContent = buildings.length
+            ? "Choose the building, then the office."
+            : "No buildings are open right now.";
+        }).catch(function () {
+          buildingSelect.replaceChildren(option("", "Buildings could not be loaded"));
+          status.textContent = "The building list could not be loaded. Try again.";
+        });
+      })();
+    </script>
   {% endif %}
 {% endblock %}

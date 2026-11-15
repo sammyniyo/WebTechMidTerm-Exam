@@ -11,6 +11,11 @@ from gatepass.models import GateEvent, VisitorVisit
 
 
 class VisitorRegistrationTests(TestCase):
+    def test_guest_form_fetches_the_building_api(self):
+        response = self.client.get(reverse("gatepass:visitor_register"))
+        self.assertContains(response, reverse("campus:api_buildings"))
+        self.assertContains(response, 'id="id_building"')
+
     def test_missing_details_are_rejected(self):
         response = self.client.post(reverse("gatepass:visitor_register"), {})
         self.assertEqual(response.status_code, 200)
