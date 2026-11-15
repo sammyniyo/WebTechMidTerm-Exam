@@ -846,3 +846,11 @@ td .actions { justify-content: flex-end; padding: 0; }
   body.gate { background: white; }
   .poster { border: 0; max-width: none; }
 }
+
+/* Office management (campus app) */
+.head-links { display: flex; align-items: center; gap: 0.8rem; }
+.panel-head .head-links a.mini-btn { color: white; text-decoration: none; }
+.desk-form .check-field { display: flex; align-items: center; gap: 0.5rem; }
+.desk-form .check-field input { width: 1.05rem; height: 1.05rem; accent-color: var(--blue); }
+.field-help { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.8rem; }
+.actions button.danger { background: #9a4a4a; }
