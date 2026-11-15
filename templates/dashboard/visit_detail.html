@@ -29,6 +29,10 @@
           <div><dt>Arrived</dt><dd>{{ visit.created_at|date:"d M Y, H:i" }}</dd></div>
           <div><dt>Valid until</dt><dd>{{ visit.valid_until|date:"d M Y, H:i" }}</dd></div>
         </dl>
+        <figure class="desk-qr">
+          <img src="{% url 'gatepass:visitor_qr' visit.reference_number %}" alt="QR code for this visit" width="120" height="120">
+          <figcaption>Pass QR · <a href="{% url 'gatepass:visitor_qr' visit.reference_number %}?download=1" download>Download</a></figcaption>
+        </figure>
       </section>
       <section class="panel">
         <div class="panel-head"><h2>Desk action</h2></div>

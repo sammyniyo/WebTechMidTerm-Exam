@@ -806,3 +806,43 @@ td .actions { justify-content: flex-end; padding: 0; }
   .stat-grid, .gate-split, .facts { grid-template-columns: 1fr; }
   .gate-top, .gate-content, .gate-foot { padding-left: 1rem; padding-right: 1rem; }
 }
+
+/* Insights (analytics app) */
+.live-bar { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.7rem; color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+.live-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #1f7a5c; box-shadow: 0 0 0 3px #e7f6ef; animation: live-pulse 2s infinite; }
+@keyframes live-pulse { 50% { opacity: 0.35; } }
+.ml-alert-warning { background: #f8f1e3; color: #8a6a2f; }
+.ml-alert-info { background: var(--soft); color: var(--blue); }
+.chart-box { position: relative; height: 15rem; padding: 0.3rem 1rem 1rem; }
+.meter { display: inline-block; width: 4.5rem; height: 0.45rem; margin-right: 0.35rem; overflow: hidden; border-radius: 999px; background: #eef4fb; vertical-align: middle; }
+.meter i { display: block; height: 100%; background: linear-gradient(90deg, #c98b8b, #c4a15a 50%, #1f7a5c); }
+.model-cards { display: grid; gap: 0.7rem; padding: 0.3rem 1rem 1rem; }
+.model-card { padding: 0.8rem 0.9rem; border: 1px solid var(--line); border-radius: 0.8rem; background: #f9fbfe; }
+.model-card small { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.78rem; }
+.model-card .metrics { margin-top: 0.6rem; padding: 0; grid-template-columns: repeat(4, 1fr); }
+.inline-form { margin: 0; }
+.mini-btn { border: 0; border-radius: 999px; background: var(--blue); color: white; font: inherit; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.8rem; cursor: pointer; }
+.ml-empty { margin-bottom: 0.9rem; }
+@media (max-width: 720px) { .model-card .metrics { grid-template-columns: 1fr 1fr; } }
+
+/* Gate QR poster and desk QR */
+.desk-qr { display: flex; align-items: center; gap: 0.8rem; margin: 0 1rem 1rem; }
+.desk-qr figcaption { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+.desk-qr a { color: var(--blue); }
+.poster-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.9rem; }
+.poster-tools .gate-note { margin: 0; max-width: 40rem; }
+.poster-tools .actions { padding: 0; }
+.poster { display: grid; justify-items: center; max-width: 34rem; margin: 0 auto; padding: 2rem 1.5rem; border: 1px solid var(--line); border-radius: 1.2rem; background: white; text-align: center; }
+.poster-logo { width: 4.5rem; height: auto; }
+.poster-kicker { margin: 0.6rem 0 0; color: var(--muted); font-weight: 700; font-size: 0.85rem; }
+.poster h2 { margin: 0.2rem 0 0.3rem; font-size: 2rem; color: var(--navy); }
+.poster-sub { margin: 0 0 1rem; color: var(--muted); }
+.poster-qr { width: min(320px, 100%); height: auto; }
+.poster-steps { margin: 1rem 0 0.6rem; padding-left: 1.2rem; text-align: left; line-height: 1.7; }
+.poster-url { margin: 0; color: var(--muted); font-size: 0.8rem; word-break: break-all; }
+@media print {
+  .gate-side, .gate-top, .gate-foot, .poster-tools, .desk-messages { display: none !important; }
+  .gate-shell, .gate-main, .gate-content { display: block; padding: 0; background: white; }
+  body.gate { background: white; }
+  .poster { border: 0; max-width: none; }
+}

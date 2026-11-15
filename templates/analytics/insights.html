@@ -1,0 +1,248 @@
+{% extends "dashboard/base_desk.html" %}
+{% load static desk_pages %}
+
+{% block title %}Insights{% endblock %}
+{% block heading %}Insights{% endblock %}
+
+{% block content %}
+  {% if not snap.models_ready.traffic or not snap.models_ready.visit_risk %}
+    <section class="panel ml-empty">
+      <div class="panel-head"><h2>No trained model yet</h2></div>
+      <p class="gate-note">Run <code>python manage.py setup_demo</code> (local) or <code>python manage.py train_models</code>, then reload this page.</p>
+      {% if can_retrain %}
+        <form class="actions" method="post" action="{% url 'dashboard:retrain' %}">{% csrf_token %}<button type="submit">Train now</button></form>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <p class="live-bar"><span class="live-dot"></span> Live · updated <strong id="live-clock">{{ snap.clock }}</strong> · refreshes every 20 s</p>
+
+  <div id="live-alert">
+    {% if snap.traffic.alert %}<p class="sample-flag ml-alert ml-alert-{{ snap.traffic.alert.tone }}">{{ snap.traffic.alert.text }}</p>{% endif %}
+  </div>
+
+  <section class="stat-grid" aria-label="Predictions">
+    <article class="stat stat-entries">
+      <div class="stat-body"><div><p>Entries so far today</p><strong id="k-actual">{{ snap.traffic.actual_so_far|default:"0" }}</strong></div></div>
+      <span class="stat-hint">Forecast to this hour: <b id="k-expected-so-far">{{ snap.traffic.expected_so_far|default:"—" }}</b></span>
+    </article>
+    <article class="stat stat-visitors">
+      <div class="stat-body"><div><p>Expected rest of today</p><strong id="k-rest">{{ snap.traffic.expected_rest_of_day|default:"—" }}</strong></div></div>
+      <span class="stat-hint">Next hour (<span id="k-next-label">{{ snap.traffic.next_hour.label }}</span>): <b id="k-next">{{ snap.traffic.next_hour.entries }}</b> entries</span>
+    </article>
+    <article class="stat stat-offices">
+      <div class="stat-body"><div><p>Peak <span id="k-peak-day">{{ snap.traffic.peak.day }}</span></p><strong id="k-peak">{{ snap.traffic.peak.label|default:"—" }}</strong></div></div>
+      <span class="stat-hint">~<b id="k-peak-entries">{{ snap.traffic.peak.entries }}</b> entries · staff <b id="k-officers">{{ snap.traffic.peak.officers }}</b> officer(s)</span>
+    </article>
+    <article class="stat stat-pending">
+      <div class="stat-body"><div><p>High-risk pending</p><strong id="k-risk">{{ snap.visits.high_risk_pending }}</strong></div></div>
+      <span class="stat-hint">of <b id="k-pending">{{ snap.visits.pending }}</b> pending · live accuracy
+        <b id="k-acc">{% if snap.visits.live_accuracy.rate is not None %}{% widthratio snap.visits.live_accuracy.rate 1 100 %}%{% else %}—{% endif %}</b></span>
+    </article>
+  </section>
+
+  <div class="gate-split charts">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Gate traffic: actual vs forecast</h2>
+        <span>{% if snap.traffic.weather.temperature_c is not None %}Now {{ snap.traffic.weather.temperature_c }}°C · rain {{ snap.traffic.weather.rain_mm }} mm{% endif %}</span>
+      </div>
+      <div class="chart-box"><canvas id="chart-today" aria-label="Entries per hour today, actual and forecast"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Forecast for <span id="tomorrow-label"></span></h2></div>
+      <div class="chart-box"><canvas id="chart-tomorrow" aria-label="Forecast entries per hour tomorrow"></canvas></div>
+    </section>
+  </div>
+
+  <div class="gate-split">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Visit risk queue</h2>
+        <span>Pending visits, riskiest first</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Visitor</th><th>Going to</th><th>Approval chance</th><th class="status">Risk</th></tr></thead>
+          <tbody>
+            {% for visit in queue %}
+              <tr>
+                <td><a href="{% url 'dashboard:visit_detail' visit.reference_number %}">{{ visit.full_name }}</a><small>{{ visit.organization }}</small></td>
+                <td>{{ visit.destination }}</td>
+                <td>
+                  {% if visit.prediction %}
+                    <span class="meter"><i style="width: {{ visit.prediction.percent }}%"></i></span> {{ visit.prediction.percent }}%
+                    <small>{% for s in visit.prediction.signals|slice:":2" %}{{ s.text }}{% if not forloop.last %} · {% endif %}{% endfor %}</small>
+                  {% else %}<small>Not scored</small>{% endif %}
+                </td>
+                <td class="status">{% if visit.prediction %}<span class="pill pill-{{ visit.prediction.badge }}">{{ visit.prediction.get_risk_level_display }}</span>{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4">No pending visits.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% pager page_obj %}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Latest predictions</h2><span>New registrations</span></div>
+      <ol class="activity" id="recent">
+        {% for p in snap.recent_predictions %}
+          <li>
+            <span class="avatar">{{ p.percent }}</span>
+            <div><strong>{{ p.name }}</strong><span>{{ p.destination }} · {{ p.status }}</span></div>
+            <div class="activity-end"><time>{{ p.time }}</time><em class="pill pill-{{ p.badge }}">{{ p.risk_label }}</em></div>
+          </li>
+        {% empty %}
+          <li>No predictions yet.</li>
+        {% endfor %}
+      </ol>
+    </section>
+  </div>
+
+  <div class="gate-split charts">
+    <section class="panel">
+      <div class="panel-head"><h2>Daily entries, last 14 days</h2><span>Live records and synthetic history</span></div>
+      <div class="chart-box"><canvas id="chart-daily"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>What the models weigh</h2><span>Feature importance</span></div>
+      <div class="chart-box"><canvas id="chart-importance"></canvas></div>
+    </section>
+  </div>
+
+  <div class="gate-split">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Deployed models</h2>
+        {% if can_retrain %}
+          <form method="post" action="{% url 'dashboard:retrain' %}" class="inline-form">{% csrf_token %}<button type="submit" class="mini-btn">Retrain from API</button></form>
+        {% endif %}
+      </div>
+      <div class="model-cards">
+        {% for m in history %}{% if m.is_active %}
+          <article class="model-card">
+            <p class="gate-kicker">{{ m.get_kind_display }} · v{{ m.version }}</p>
+            <strong>{{ m.algorithm }}</strong>
+            <small>{{ m.data_source }} · trained {{ m.trained_at|date:"d M Y, H:i" }} · {{ m.train_rows }} train / {{ m.test_rows }} test rows</small>
+            <dl class="facts metrics">
+              {% if m.kind == "traffic" %}
+                <div><dt>MAE</dt><dd>{{ m.metrics.mae }} entries</dd></div>
+                <div><dt>R²</dt><dd>{{ m.metrics.r2 }}</dd></div>
+                <div><dt>Baseline MAE</dt><dd>{{ m.metrics.baseline_mae }}</dd></div>
+                <div><dt>Better than baseline</dt><dd>{{ m.metrics.improvement_pct }}%</dd></div>
+              {% else %}
+                <div><dt>Accuracy</dt><dd>{{ m.metrics.accuracy }}</dd></div>
+                <div><dt>ROC AUC</dt><dd>{{ m.metrics.roc_auc }}</dd></div>
+                <div><dt>F1</dt><dd>{{ m.metrics.f1 }}</dd></div>
+                <div><dt>Majority baseline</dt><dd>{{ m.metrics.baseline_accuracy }}</dd></div>
+              {% endif %}
+            </dl>
+          </article>
+        {% endif %}{% endfor %}
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Training history</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Model</th><th>Trained</th><th class="status">State</th></tr></thead>
+          <tbody>
+            {% for m in history %}
+              <tr><td>{{ m.get_kind_display }} v{{ m.version }}</td><td class="clock">{{ m.trained_at|date:"d M, H:i" }}</td>
+                <td class="status"><span class="pill {% if m.is_active %}pill-success{% endif %}">{% if m.is_active %}Active{% else %}Retired{% endif %}</span></td></tr>
+            {% empty %}
+              <tr><td colspan="3">Nothing trained yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+  <script>
+    (function () {
+      const data = {{ charts_json|safe }};
+      const blue = "#0058b8", soft = "rgba(0,88,184,0.15)", amber = "#c4a15a", green = "#1f7a5c";
+      document.getElementById("tomorrow-label").textContent = data.today.tomorrow_label;
+      if (!window.Chart) return;
+      Chart.defaults.font.family = "Nunito, sans-serif";
+      Chart.defaults.color = "#5a7190";
+      const today = new Chart(document.getElementById("chart-today"), {
+        data: {
+          labels: data.today.labels,
+          datasets: [
+            { type: "bar", label: "Actual entries", data: data.today.actual, backgroundColor: blue, borderRadius: 4 },
+            { type: "line", label: "Forecast", data: data.today.predicted, borderColor: amber, backgroundColor: amber, borderDash: [6, 4], tension: 0.3, pointRadius: 0 }
+          ]
+        },
+        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+      new Chart(document.getElementById("chart-tomorrow"), {
+        type: "line",
+        data: { labels: data.today.labels, datasets: [{ label: "Forecast entries", data: data.today.tomorrow, borderColor: blue, backgroundColor: soft, fill: true, tension: 0.3, pointRadius: 0 }] },
+        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+      new Chart(document.getElementById("chart-daily"), {
+        type: "bar",
+        data: { labels: data.daily.map(d => d.label), datasets: [
+          { label: "Live", data: data.daily.map(d => d.live), backgroundColor: blue, stack: "s" },
+          { label: "Synthetic history", data: data.daily.map(d => d.synthetic), backgroundColor: "#b7d0e8", stack: "s" }
+        ] },
+        options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+      });
+      const names = Array.from(new Set(data.importance.visit.map(r => r.feature).concat(data.importance.traffic.map(r => r.feature))));
+      const pick = (rows) => names.map(n => { const r = rows.find(x => x.feature === n); return r ? r.weight : null; });
+      new Chart(document.getElementById("chart-importance"), {
+        type: "bar",
+        data: { labels: names.map(n => n.replace(/_/g, " ")), datasets: [
+          { label: "Visit risk", data: pick(data.importance.visit), backgroundColor: green },
+          { label: "Traffic", data: pick(data.importance.traffic), backgroundColor: blue }
+        ] },
+        options: { indexAxis: "y", maintainAspectRatio: false }
+      });
+
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.textContent = v; };
+      async function refresh() {
+        try {
+          const res = await fetch("{% url 'analytics:live' %}", { headers: { Accept: "application/json" } });
+          if (!res.ok) return;
+          const s = await res.json();
+          set("live-clock", s.clock);
+          if (s.traffic) {
+            set("k-actual", s.traffic.actual_so_far); set("k-expected-so-far", s.traffic.expected_so_far);
+            set("k-rest", s.traffic.expected_rest_of_day); set("k-next", s.traffic.next_hour.entries);
+            set("k-next-label", s.traffic.next_hour.label); set("k-peak", s.traffic.peak.label);
+            set("k-peak-day", s.traffic.peak.day); set("k-peak-entries", s.traffic.peak.entries);
+            set("k-officers", s.traffic.peak.officers);
+            const box = document.getElementById("live-alert");
+            box.innerHTML = s.traffic.alert ? '<p class="sample-flag ml-alert ml-alert-' + s.traffic.alert.tone + '"></p>' : "";
+            if (s.traffic.alert) box.firstChild.textContent = s.traffic.alert.text;
+          }
+          set("k-risk", s.visits.high_risk_pending); set("k-pending", s.visits.pending);
+          if (s.visits.live_accuracy.rate !== null) set("k-acc", Math.round(s.visits.live_accuracy.rate * 100) + "%");
+          const list = document.getElementById("recent");
+          if (s.recent_predictions.length) {
+            list.innerHTML = "";
+            s.recent_predictions.forEach(p => {
+              const li = document.createElement("li");
+              li.innerHTML = '<span class="avatar"></span><div><strong></strong><span></span></div><div class="activity-end"><time></time><em class="pill pill-' + p.badge + '"></em></div>';
+              li.querySelector(".avatar").textContent = p.percent;
+              li.querySelector("strong").textContent = p.name;
+              li.querySelector("div span").textContent = p.destination + " · " + p.status;
+              li.querySelector("time").textContent = p.time;
+              li.querySelector("em").textContent = p.risk_label;
+              list.appendChild(li);
+            });
+          }
+        } catch (e) { /* keep the last values */ }
+      }
+      setInterval(refresh, 20000);
+    })();
+  </script>
+{% endblock %}

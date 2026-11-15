@@ -1,6 +1,7 @@
 from django.urls import path
 
 from accounts import desk
+from analytics import views as analytics_views
 from . import views
 
 app_name = "dashboard"
@@ -18,6 +19,8 @@ urlpatterns = [
     path("check-ins/", views.check_ins, name="check_ins"),
     path("check-ins/<int:pk>/approve/", views.approve_check_in, name="approve_check_in"),
     path("check-ins/<int:pk>/checkout/", views.checkout_check_in, name="checkout_check_in"),
+    path("insights/", analytics_views.insights_page, name="insights"),
+    path("insights/retrain/", analytics_views.retrain, name="retrain"),
     path("log/", views.gate_log, name="gate_log"),
     path("gate-log/", views.gate_log),
 ]

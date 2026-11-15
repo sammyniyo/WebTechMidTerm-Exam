@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=7">
 </head>
 <body class="gate">
   <div class="gate-shell">
@@ -30,9 +30,17 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.6-2.6 2.8-4 5.5-4s4.9 1.4 5.5 4"></path><circle cx="17" cy="9" r="2.2"></circle><path d="M16 15.2c1.8.3 3.2 1.4 3.8 3.3"></path></svg>
           Visitors
         </a>
+        <a class="{% if section == 'insights' %}is-active{% endif %}" href="{% url 'dashboard:insights' %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"></path><path d="M6 15l4-5 3 3 5-7"></path></svg>
+          Insights
+        </a>
         <a class="{% if section == 'log' %}is-active{% endif %}" href="{% url 'dashboard:gate_log' %}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h11M8 12h11M8 18h11"></path><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg>
           Gate log
+        </a>
+        <a class="{% if section == 'gate_qr' %}is-active{% endif %}" href="{% url 'gatepass:gate_poster' %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"></path></svg>
+          Gate QR
         </a>
         <a class="{% if section == 'offices' %}is-active{% endif %}" href="{% url 'campus:office_list' %}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"></path><path d="M9 20v-5h6v5"></path></svg>

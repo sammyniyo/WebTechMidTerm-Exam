@@ -13,6 +13,13 @@
       <div><dt>Destination</dt><dd>{{ visit.destination }}</dd></div>
       <div><dt>Valid until</dt><dd>{{ visit.valid_until|date:"d M Y, H:i" }}</dd></div>
     </dl>
+    {% if visit.status == "pending" or visit.status == "approved" or visit.status == "checked_in" %}
+      <figure class="qr-box">
+        <img src="{% url 'gatepass:visitor_qr' visit.reference_number %}" alt="QR code for visit {{ visit.reference_number }}" width="180" height="180">
+        <figcaption>{% if visit.status == 'checked_in' %}Show this code when you leave.{% else %}Show this code at the gate. Security scans it to check you in.{% endif %}</figcaption>
+        <a class="qr-save" href="{% url 'gatepass:visitor_qr' visit.reference_number %}?download=1" download>Save QR code</a>
+      </figure>
+    {% endif %}
     {% if visit.status == "pending" %}
       <p class="lede">Security must approve this visit before entry.</p>
     {% endif %}

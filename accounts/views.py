@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
